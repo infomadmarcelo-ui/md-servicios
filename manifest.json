@@ -2,7 +2,8 @@
   "name": "Gestión de Servicios MD",
   "short_name": "MD Servicios",
   "description": "Gestión de servicios técnicos - Climatización y Electricidad",
-  "start_url": "/",
+  "start_url": "/md-servicios/",
+  "scope": "/md-servicios/",
   "display": "standalone",
   "background_color": "#1a3a6b",
   "theme_color": "#1a3a6b",
@@ -22,6 +23,5 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
-  "screenshots": []
+  "categories": ["business", "productivity"]
 }
