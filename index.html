@@ -209,6 +209,7 @@ button{cursor:pointer}
 <div id="app">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:10px">
+      <div id="logo-topbar" style="width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
       <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:36px;height:36px;flex-shrink:0">
         <circle cx="60" cy="60" r="57" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
         <path id="arcTopTB" d="M 14,60 A 46,46 0 0,1 106,60" fill="none"/>
@@ -234,6 +235,7 @@ button{cursor:pointer}
           <polygon points="-4.5,-9 2.5,-9 -1.5,0 4.5,0 -4.5,11 -1,1.5 -6.5,1.5" fill="#fff"/>
         </g>
       </svg>
+      </div>
       <div class="topbar-title">Servicios Técnicos</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;position:relative">
@@ -2587,12 +2589,15 @@ function fillLoginSelect(){
 // ── AUTH ─────────────────────────────────────────────────────────────
 function actualizarLogoApp(){
   var logo = db.config && db.config.logo ? db.config.logo : '';
+  // Logo en login
   var loginLogo = document.getElementById('logo-empresa-login');
-  if(loginLogo){
-    if(logo){
-      loginLogo.innerHTML = '<img src="'+logo+'" style="width:160px;height:160px;object-fit:contain;border-radius:16px">';
-    }
-    // Si no hay logo, el SVG original queda tal cual (no lo tocamos)
+  if(loginLogo && logo){
+    loginLogo.innerHTML = '<img src="'+logo+'" style="width:160px;height:160px;object-fit:contain;border-radius:16px">';
+  }
+  // Logo en topbar
+  var topbarLogo = document.getElementById('logo-topbar');
+  if(topbarLogo && logo){
+    topbarLogo.innerHTML = '<img src="'+logo+'" style="width:36px;height:36px;object-fit:contain;border-radius:6px">';
   }
 }
 
