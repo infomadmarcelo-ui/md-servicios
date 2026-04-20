@@ -244,6 +244,10 @@ button{cursor:pointer}
       <button class="logout-btn" onclick="doLogout()">Salir</button>
       <button id="menu-btn" onclick="toggleMenu()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:var(--radius-sm);padding:4px 9px;font-size:20px;line-height:1;cursor:pointer">&#8942;</button>
       <div id="dropdown-menu" style="display:none;position:absolute;top:38px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:300;min-width:165px;overflow:hidden">
+        <div onmousedown="toggleMenu();setTimeout(cambiarContrasena,50)" style="padding:12px 16px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Cambiar contraseña
+        </div>
         <div onmousedown="toggleMenu();setTimeout(abrirClientes,50)" style="padding:12px 16px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Clientes
@@ -1039,6 +1043,52 @@ function abrirFormEquipoCliente(nombreCliente){
   }, 50);
 }
 
+
+// ── CAMBIAR CONTRASEÑA ───────────────────────────────────────────────
+function cambiarContrasena(){
+  var html = '<div class="mtitle">🔒 Cambiar contraseña</div>';
+  html += '<div style="font-size:13px;color:var(--text2);margin-bottom:14px">Ingresá tu nueva contraseña. Usá al menos 8 caracteres con letras y números.</div>';
+  html += '<div class="field"><label>Contraseña actual</label><input type="password" id="cp-actual" placeholder="••••••••"></div>';
+  html += '<div class="field"><label>Nueva contraseña</label><input type="password" id="cp-nueva" placeholder="Mínimo 8 caracteres"></div>';
+  html += '<div class="field"><label>Repetir nueva contraseña</label><input type="password" id="cp-repetir" placeholder="Repetí la nueva contraseña"></div>';
+  html += '<div id="cp-error" style="color:var(--red-text);font-size:13px;margin-bottom:8px;display:none"></div>';
+  html += '<div class="mfoot"><button class="btn" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="guardarNuevaContrasena()">Guardar</button></div>';
+  showModal(html);
+}
+
+function guardarNuevaContrasena(){
+  var actual  = (document.getElementById('cp-actual')||{}).value||'';
+  var nueva   = (document.getElementById('cp-nueva')||{}).value||'';
+  var repetir = (document.getElementById('cp-repetir')||{}).value||'';
+  var errEl   = document.getElementById('cp-error');
+
+  if(!actual||!nueva||!repetir){ errEl.textContent='Completá todos los campos'; errEl.style.display='block'; return; }
+  if(nueva.length < 8){ errEl.textContent='La contraseña debe tener al menos 8 caracteres'; errEl.style.display='block'; return; }
+  if(nueva !== repetir){ errEl.textContent='Las contraseñas no coinciden'; errEl.style.display='block'; return; }
+
+  errEl.style.display='none';
+
+  // Re-autenticar y cambiar contraseña con Firebase
+  var user = auth.currentUser;
+  if(!user){ showAlert('No hay sesión activa'); return; }
+
+  var credential = firebase.auth.EmailAuthProvider.credential(user.email, actual);
+  user.reauthenticateWithCredential(credential)
+    .then(function(){
+      return user.updatePassword(nueva);
+    })
+    .then(function(){
+      closeModal();
+      showAlert('✅ Contraseña cambiada correctamente');
+    })
+    .catch(function(err){
+      var msg = 'Error al cambiar la contraseña';
+      if(err.code==='auth/wrong-password'||err.code==='auth/invalid-credential') msg='La contraseña actual es incorrecta';
+      else if(err.code==='auth/weak-password') msg='La contraseña es muy débil';
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    });
+}
 
 // ── MENÚ 3 PUNTOS ────────────────────────────────────────────────────
 function toggleMenu(){
