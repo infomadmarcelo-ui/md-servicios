@@ -31,6 +31,9 @@
   --red-light:#450a0a;--red-text:#fca5a5;
 }}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;background:var(--bg);color:var(--text)}
 input,select,textarea,button{font-family:inherit;font-size:inherit}
 button{cursor:pointer}
@@ -1312,6 +1315,65 @@ function guardarClienteYVolver(){
   }, 50);
 }
 
+function nuevoEquipoDesdeModal(){
+  var clienteNombre = (document.getElementById('m-cl')||{}).value||'';
+  if(!clienteNombre){ showAlert('Seleccioná un cliente primero'); return; }
+  _equipoEditandoId = null;
+  var c = null;
+  var tipoOpts = TIPOS_EQUIPO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+  var gasOpts  = TIPOS_GAS.map(function(g){ return '<option>'+g+'</option>'; }).join('');
+  var html = '<div class="mtitle">Nuevo equipo · '+escH(clienteNombre)+'</div>';
+  html += '<div class="frow"><div class="field"><label>Tipo *</label><select id="eq-tipo">'+tipoOpts+'</select></div>';
+  html += '<div class="field"><label>Ubicación</label><input id="eq-ubic" placeholder="Ej: Living, Cocina"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Marca</label><input id="eq-marca" placeholder="Ej: Carrier"></div>';
+  html += '<div class="field"><label>Modelo</label><input id="eq-modelo" placeholder="Ej: 42KCC012DS"></div></div>';
+  html += '<div class="frow"><div class="field"><label>N° de serie</label><input id="eq-serie" placeholder="Número de serie"></div>';
+  html += '<div class="field"><label>Capacidad</label><input id="eq-cap" placeholder="Ej: 3000 frigorías"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Tipo de gas</label><select id="eq-gas">'+gasOpts+'</select></div>';
+  html += '<div class="field"><label>Fecha instalación</label><input type="date" id="eq-inst"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Frecuencia (meses)</label><input type="number" id="eq-freq" value="6" min="1" max="60"></div>';
+  html += '<div class="field"><label>Próximo servicio</label><input type="date" id="eq-prox"></div></div>';
+  html += '<div class="mfoot"><button class="btn" onclick="closeModal();setTimeout(function(){openServiceModal(window._editingServiceId)},50)">Cancelar</button>';
+  html += '<button class="btn btn-primary" onclick="guardarEquipoDesdeModal(''+escH(clienteNombre)+'')">Guardar</button></div>';
+  showModal(html);
+}
+
+function guardarEquipoDesdeModal(clienteNombre){
+  var freq = parseInt((document.getElementById('eq-freq')||{}).value||6);
+  var prox = (document.getElementById('eq-prox')||{}).value;
+  if(!prox && freq){ var d=new Date(); d.setMonth(d.getMonth()+freq); prox=d.toISOString().split('T')[0]; }
+  var data = {
+    id: 'eq_'+(Date.now()),
+    cliente: clienteNombre,
+    tipo: (document.getElementById('eq-tipo')||{}).value||'',
+    marca: ((document.getElementById('eq-marca')||{}).value||'').trim(),
+    modelo: ((document.getElementById('eq-modelo')||{}).value||'').trim(),
+    serie: ((document.getElementById('eq-serie')||{}).value||'').trim(),
+    capacidad: ((document.getElementById('eq-cap')||{}).value||'').trim(),
+    gas: (document.getElementById('eq-gas')||{}).value||'',
+    ubicacion: ((document.getElementById('eq-ubic')||{}).value||'').trim(),
+    fechaInstalacion: (document.getElementById('eq-inst')||{}).value||'',
+    frecuenciaMeses: freq,
+    proximoServicio: prox,
+    notas: '',
+    historial: []
+  };
+  if(!db.equiposDB) db.equiposDB=[];
+  db.equiposDB.push(data);
+  saveDB();
+  actualizarBadgeEquipos();
+  closeModal();
+  var sid = window._editingServiceId;
+  setTimeout(function(){
+    openServiceModal(sid);
+    setTimeout(function(){
+      actualizarSelectorEquipo();
+      var sel = document.getElementById('m-equipo');
+      if(sel) sel.value = data.id;
+    }, 150);
+  }, 50);
+}
+
 function actualizarSelectorEquipo(){
   var inp = document.getElementById('m-cl');
   var sel = document.getElementById('m-equipo');
@@ -2214,7 +2276,8 @@ function openServiceModal(id){
   html += '</div>';
   // Selector de equipo (filtrado por cliente)
   html += '<div class="field"><label>Equipo vinculado <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>';
-  html += '<select id="m-equipo" onchange=""><option value="">-- Sin equipo --</option>';
+  html += '<div style="display:flex;gap:8px;align-items:center">';
+  html += '<select id="m-equipo" style="flex:1"><option value="">-- Sin equipo --</option>';
   var eqsCliente = s ? (db.equiposDB||[]).filter(function(e){ return e.cliente===s.cliente; }) : [];
   eqsCliente.forEach(function(eq){
     var sel = s && s.equipoId===eq.id ? ' selected' : '';
@@ -2223,7 +2286,9 @@ function openServiceModal(id){
     label += (eq.modelo||'')+' · '+(eq.ubicacion||'')+' · '+(eq.marca||'');
     html += '<option value="'+eq.id+'"'+sel+'>'+escH(label.replace(/^ · | · $/g,'').replace(/ ·  · /g,' · '))+'</option>';
   });
-  html += '</select></div>';
+  html += '</select>';
+  html += '<button type="button" class="btn btn-sm" onclick="nuevoEquipoDesdeModal()">+ Equipo</button>';
+  html += '</div></div>';
   html += '<div class="field"><label>Descripción <span style="font-weight:400;color:var(--text3)">(opcional)</span></label><textarea id="m-desc" placeholder="Descripción del trabajo">'+(s?escH(s.descripcion||''):'')+'</textarea></div>';
   html += '<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label>Técnicos asignados</label><button type="button" onclick="abrirCalculadora()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>Calculadora</button></div><div class="chips" id="chips-tec">';
   db.tecnicos.forEach(t=>{
