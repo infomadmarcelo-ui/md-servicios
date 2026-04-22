@@ -1334,11 +1334,13 @@ function nuevoEquipoDesdeModal(){
   html += '<div class="frow"><div class="field"><label>Frecuencia (meses)</label><input type="number" id="eq-freq" value="6" min="1" max="60"></div>';
   html += '<div class="field"><label>Próximo servicio</label><input type="date" id="eq-prox"></div></div>';
   html += '<div class="mfoot"><button class="btn" onclick="closeModal();setTimeout(function(){openServiceModal(window._editingServiceId)},50)">Cancelar</button>';
-  html += '<button class="btn btn-primary" onclick="guardarEquipoDesdeModal(''+escH(clienteNombre)+'')">Guardar</button></div>';
+  window._nuevoEquipoCliente = clienteNombre;
+  html += '<button class="btn btn-primary" onclick="guardarEquipoDesdeModal()">Guardar</button></div>';
   showModal(html);
 }
 
-function guardarEquipoDesdeModal(clienteNombre){
+function guardarEquipoDesdeModal(){
+  var clienteNombre = window._nuevoEquipoCliente||'';
   var freq = parseInt((document.getElementById('eq-freq')||{}).value||6);
   var prox = (document.getElementById('eq-prox')||{}).value;
   if(!prox && freq){ var d=new Date(); d.setMonth(d.getMonth()+freq); prox=d.toISOString().split('T')[0]; }
