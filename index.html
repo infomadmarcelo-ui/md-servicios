@@ -30,7 +30,7 @@
   --yellow-light:#451a03;--yellow-text:#fcd34d;
   --red-light:#450a0a;--red-text:#fca5a5;
 }}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;background:var(--bg);color:var(--text)}
 input,select,textarea,button{font-family:inherit;font-size:inherit}
 button{cursor:pointer}
@@ -1330,6 +1330,11 @@ function actualizarSelectorEquipo(){
     opt.textContent = parts.join(' · ');
     sel.appendChild(opt);
   });
+  var optNuevo = document.createElement('option');
+  optNuevo.value = '__nuevo__';
+  optNuevo.textContent = '── + Agregar equipo nuevo ──';
+  sel.appendChild(optNuevo);
+  sel.onchange = function(){ if(this.value==='__nuevo__'){ this.value=''; nuevoEquipoDesdeModal(); } };
 }
 
 function autocompletarCliente(id){
@@ -1687,7 +1692,7 @@ function viewPendiente(id){
         '<input type="number" value="'+(item.qty||1)+'" '+dis+'>' +
         '<input value="'+escH(item.desc||'')+'" '+dis+'>' +
         '<input type="number" value="'+(item.importe||'')+'" '+dis+'>' +
-        '<button class="tbtn '+cls+'" '+dis+' style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
+        '<button class="tbtn '+cls+'" '+dis+' data-tipo="'+(item.tipo||'ingreso')+'" style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
         '</div>';
     }).join('');
   }
@@ -1697,17 +1702,25 @@ function viewPendiente(id){
   const totC=ing+cos, base=ing-gas;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
+  // Total destacado
+  html +=
+    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
+      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
+    '</div>';
+  // Desglose interno
   html += '<div class="resumen" style="margin-top:10px">' +
+    '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
-    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
-      '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
-      tecs.map(t=>'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
-        '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'
-      ).join('') + '</div>' : '') +
+    '<div class="rrow tot" style="border-top:none;margin-top:4px;padding-top:4px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+    (tecs.length ?
+      '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Reparto por técnico</div>' +
+        tecs.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
+          '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'; }).join('') +
+      '</div>' : '') +
     '</div>';
 
   html += '<div class="mfoot">' +
@@ -1737,22 +1750,20 @@ function renderFactList(){
   el.innerHTML = svcs.map(s=>{
     const f = calcFin(s);
     const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
-    return '<div class="scard">' +
+    const eq = s.equipoId ? (db.equiposDB||[]).find(function(e){ return e.id===s.equipoId; }) : null;
+    const eqLabel = eq ? escH([eq.tipo,eq.marca,eq.modelo].filter(Boolean).join(' '))+(eq.ubicacion?' · '+escH(eq.ubicacion):'') : '';
+    return '<div class="scard" onclick="viewService('+s.id+')" style="cursor:pointer">' +
       '<div class="scard-head"><div><div class="scard-name">'+escH(s.cliente)+'</div>' +
-      '<div class="scard-meta">'+escH(s.tipo)+' · '+fmtDate(s.fecha)+'</div>' +
-      '<div class="scard-meta" style="display:flex;align-items:center;gap:2px">📍 '+escH(s.direccion||'')+(s.zona?' · '+escH(s.zona):'')+mapsIcon(s.direccion,s.zona)+'</div></div>' +
+      '<div class="scard-meta">'+escH(s.tipo)+(s.zona?' · '+escH(s.zona):'')+' · '+fmtDate(s.fecha)+'</div></div>' +
       '<span class="badge bb">Facturado</span></div>' +
-      (tecs.length?'<div class="scard-meta">👷 '+tecs.map(t=>t.nombre).join(', ')+'</div>':'')+
-      '<div style="font-size:13px;color:var(--text2);margin-top:6px">' +
-      '<span style="color:var(--green-text)">Ing: <b>$ '+fmt(f.ingresos)+'</b></span> &nbsp;' +
-      '<span style="color:var(--blue-text)">Costo: <b>$ '+fmt(f.costos)+'</b></span> &nbsp;' +
-      '<span style="color:var(--red-text)">Gasto: <b>$ '+fmt(f.gastos)+'</b></span></div>' +
-      '<div style="font-size:16px;font-weight:700;color:#fbbf24;margin-top:4px">Total cliente: $ '+fmt(f.totalCliente)+'</div>' +
-      (tecs.length?'<div style="font-size:12px;color:var(--green-text);margin-top:2px">'+tecs.map(t=>t.nombre+': $ '+fmt(f.rMap[t.id]||0)).join(' · ')+'</div>':'')+
+      '<div class="scard-meta" style="display:flex;align-items:center;gap:2px">📍 '+escH(s.direccion||'')+(s.zona?' · '+escH(s.zona):'')+mapsIcon(s.direccion,s.zona)+'</div>' +
+      (s.fecha?'<div class="scard-meta">📅 '+fmtDate(s.fecha)+(s.hora?' ⏰ '+s.hora:'')+'</div>':'')+
+      (tecs.length?'<div class="scard-meta">👷 '+tecs.map(function(t){ return t.nombre; }).join(', ')+'</div>':'')+
+      (eqLabel?'<div class="scard-meta">🔧 '+eqLabel+'</div>':'')+
+      '<div style="font-size:13px;color:var(--text2);margin-top:4px">Total: <strong style="color:var(--text)">$ '+fmt(f.totalCliente)+'</strong></div>' +
       '<div class="scard-foot"><div class="arow">' +
-      '<button class="btn btn-sm" onclick="generarPDF('+s.id+')" title="Generar PDF">📄 PDF</button>' +
-      '<button class="btn btn-sm" onclick="viewService('+s.id+')">👁 Ver</button>' +
-      '<button class="btn btn-danger btn-sm" onclick="desFacturar('+s.id+')">Borrar</button>' +
+      '<button class="btn btn-sm" onclick="event.stopPropagation();generarPDF('+s.id+')" title="Generar PDF">📄 PDF</button>' +
+      '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();desFacturar('+s.id+')">Borrar</button>' +
       '</div></div></div>';
   }).join('');
 }
@@ -1800,6 +1811,21 @@ function viewService(id){
   });
   html += '</div></div>';
 
+  // Equipo vinculado
+  if(s.equipoId){
+    const eq = (db.equiposDB||[]).find(function(e){ return e.id===s.equipoId; });
+    if(eq){
+      html += '<div class="field"><label>Equipo intervenido</label>';
+      html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text)">';
+      html += '<div style="font-weight:600;margin-bottom:4px">🔧 '+escH([eq.tipo,eq.marca,eq.modelo].filter(Boolean).join(' '))+'</div>';
+      if(eq.serie)    html += '<div style="color:var(--text2)">N° serie: <span style="color:var(--text)">'+escH(eq.serie)+'</span></div>';
+      if(eq.ubicacion)html += '<div style="color:var(--text2)">Ubicación: <span style="color:var(--text)">'+escH(eq.ubicacion)+'</span></div>';
+      if(eq.capacidad)html += '<div style="color:var(--text2)">Capacidad: <span style="color:var(--text)">'+escH(eq.capacidad)+'</span></div>';
+      if(eq.gas)      html += '<div style="color:var(--text2)">Gas: <span style="color:var(--text)">'+escH(eq.gas)+'</span></div>';
+      html += '</div></div>';
+    }
+  }
+
   html += '<hr style="border:none;border-top:1px solid var(--border);margin:14px 0">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
   html += '<div style="font-size:13px;font-weight:600;color:var(--text2)">Ítems del servicio</div>';
@@ -1815,7 +1841,7 @@ function viewService(id){
         '<input type="number" value="'+(item.qty||1)+'" '+dis+'>' +
         '<input value="'+escH(item.desc||'')+'" '+dis+'>' +
         '<input type="number" value="'+(item.importe||'')+'" '+dis+'>' +
-        '<button class="tbtn '+cls+'" '+dis+' style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
+        '<button class="tbtn '+cls+'" '+dis+' data-tipo="'+(item.tipo||'ingreso')+'" style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
         '</div>';
     }).join('');
   }
@@ -1826,17 +1852,25 @@ function viewService(id){
   const totC=ing+cos, base=ing-gas;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
+  // Total destacado
+  html +=
+    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
+      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
+    '</div>';
+  // Desglose interno
   html += '<div class="resumen" style="margin-top:10px">' +
+    '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
-    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
-      '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
-      tecs.map(t=>'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
-        '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'
-      ).join('') + '</div>' : '') +
+    '<div class="rrow tot" style="border-top:none;margin-top:4px;padding-top:4px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+    (tecs.length ?
+      '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
+        '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Reparto por técnico</div>' +
+        tecs.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
+          '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'; }).join('') +
+      '</div>' : '') +
     '</div>';
 
   html += '<div class="mfoot"><button class="btn btn-primary" onclick="closeModal()">Cerrar</button></div>';
@@ -1909,16 +1943,39 @@ function showDayDetail(d){
   const ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   const svcs = getVisible().filter(s=>s.fecha===ds && !s.facturado);
   const el = document.getElementById('cal-day-detail');
-  if(!svcs.length){ el.innerHTML='<div class="empty" style="padding:20px">Sin servicios este día</div>'; return; }
-  el.innerHTML = '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">'+fmtDate(ds)+'</div>' +
-    svcs.map(s=>{
-      const tecs=db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id)).map(t=>t.nombre).join(', ');
-      return '<div class="scard" style="margin-bottom:8px">' +
+  // Header con fecha y botón nuevo pedido
+  var header = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div style="font-size:14px;font-weight:700;color:var(--text)">'+fmtDate(ds)+'</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeAgenda(\''+ds+'\')">+ Nuevo pedido</button>' +
+    '</div>';
+  if(!svcs.length){
+    el.innerHTML = header + '<div class="scard" style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Sin servicios este día</div>';
+    return;
+  }
+  el.innerHTML = header + svcs.map(s=>{
+    const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id)).map(t=>t.nombre).join(', ');
+    const bc = s.estado==='En proceso' ? 'bpr' : 'bp';
+    return '<div class="scard" style="margin-bottom:8px;cursor:pointer" onclick="openServiceModal('+s.id+')">' +
+      '<div class="scard-head"><div>' +
         '<div class="scard-name">'+escH(s.cliente)+'</div>' +
-        '<div class="scard-meta">'+escH(s.tipo)+(s.hora?' · ⏰ '+s.hora:'')+'</div>' +
-        (tecs?'<div class="scard-meta">👷 '+tecs+'</div>':'')+
-        '</div>';
-    }).join('');
+        '<div class="scard-meta">'+escH(s.tipo)+(s.zona?' · '+escH(s.zona):'')+'</div>' +
+      '</div><span class="badge '+bc+'">'+(s.estado||'Pendiente')+'</span></div>' +
+      (s.hora?'<div class="scard-meta">⏰ '+s.hora+'</div>':'')+
+      (tecs?'<div class="scard-meta">👷 '+tecs+'</div>':'')+
+      '</div>';
+  }).join('');
+}
+
+var _fechaAgenda = null;
+function nuevoPedidoDesdeAgenda(fecha){
+  _fechaAgenda = fecha;
+  openServiceModal(null);
+  _fechaAgenda = null;
+  setTimeout(function(){
+    var el = document.getElementById('m-fecha');
+    if(el) el.value = fecha;
+    verificarConflictoHora();
+  }, 100);
 }
 
 // ── ESTADÍSTICAS ──────────────────────────────────────────────────────
@@ -2180,7 +2237,7 @@ function desFacturar(id){
     const s=db.servicios.find(x=>Number(x.id)===id);
     if(!s) return;
     s.facturado=false; s.estado='Pendiente';
-    saveDB(); renderFacturados();
+    saveDB(); closeModal(); showPage('pendientes', document.getElementById('nav-pendientes'));
   });
 }
 
@@ -2192,8 +2249,9 @@ function openServiceModal(id){
   modalItems = s && s.items ? JSON.parse(JSON.stringify(s.items)) : [{qty:1,desc:'',importe:'',tipo:'ingreso'}];
   repartoEditado = {}; // limpiar estado de reparto al abrir modal
   const defFecha = s ? (s.fecha||todayStr()) : todayStr();
+  const horaDefault = (s && s.hora) ? s.hora : (_fechaAgenda ? '09:00' : '');
   const horaOpts = '<option value="">-- Hora --</option>' +
-    HORAS.map(h=>'<option'+(s&&s.hora===h?' selected':'')+'>'+h+'</option>').join('');
+    HORAS.map(h=>'<option'+(horaDefault===h?' selected':'')+'>'+h+'</option>').join('');
 
   let html = '<div class="mtitle">'+(s?'Editar pedido':'Nuevo pedido')+'</div>';
   html += '<div class="frow">';
@@ -2209,12 +2267,13 @@ function openServiceModal(id){
   html += '<div class="field"><label>Estado</label><select id="m-est">'+ESTADOS.map(e=>'<option'+(s&&s.estado===e?' selected':'')+'>'+e+'</option>').join('')+'</select></div>';
   html += '</div>';
   html += '<div class="frow">';
-  html += '<div class="field"><label>Fecha de visita</label><input type="date" id="m-fecha" value="'+defFecha+'"></div>';
-  html += '<div class="field"><label>Hora</label><select id="m-hora">'+horaOpts+'</select></div>';
+  html += '<div class="field"><label>Fecha de visita</label><input type="date" id="m-fecha" value="'+defFecha+'" onchange="verificarConflictoHora()"></div>';
+  html += '<div class="field"><label>Hora</label><select id="m-hora" onchange="verificarConflictoHora()">'+horaOpts+'</select></div>';
+  html += '<div id="hora-conflict-warn" class="alert aw" style="display:none;margin-top:-8px;margin-bottom:4px"></div>';
   html += '</div>';
   // Selector de equipo (filtrado por cliente)
   html += '<div class="field"><label>Equipo vinculado <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>';
-  html += '<select id="m-equipo" onchange=""><option value="">-- Sin equipo --</option>';
+  html += '<select id="m-equipo" onchange="if(this.value===\'__nuevo__\'){this.value=\'\';nuevoEquipoDesdeModal();}"><option value="">-- Sin equipo --</option>';
   var eqsCliente = s ? (db.equiposDB||[]).filter(function(e){ return e.cliente===s.cliente; }) : [];
   eqsCliente.forEach(function(eq){
     var sel = s && s.equipoId===eq.id ? ' selected' : '';
@@ -2223,9 +2282,10 @@ function openServiceModal(id){
     label += (eq.modelo||'')+' · '+(eq.ubicacion||'')+' · '+(eq.marca||'');
     html += '<option value="'+eq.id+'"'+sel+'>'+escH(label.replace(/^ · | · $/g,'').replace(/ ·  · /g,' · '))+'</option>';
   });
+  html += '<option value="__nuevo__">── + Agregar equipo nuevo ──</option>';
   html += '</select></div>';
   html += '<div class="field"><label>Descripción <span style="font-weight:400;color:var(--text3)">(opcional)</span></label><textarea id="m-desc" placeholder="Descripción del trabajo">'+(s?escH(s.descripcion||''):'')+'</textarea></div>';
-  html += '<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label>Técnicos asignados</label><button type="button" onclick="abrirCalculadora()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>Calculadora</button></div><div class="chips" id="chips-tec">';
+  html += '<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label>Técnicos asignados</label><button type="button" onclick="abrirCalculadora()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--blue);border-radius:var(--radius-sm);background:var(--blue-light);color:var(--blue-text);font-size:13px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>Calculadora</button></div><div class="chips" id="chips-tec">';
   db.tecnicos.forEach(t=>{
     const sel = s && s.tecnicos && s.tecnicos.includes(t.id);
     html += '<div class="chip'+(sel?' sel':'')+'" data-tid="'+t.id+'">'+escH(t.nombre)+'</div>';
@@ -2251,6 +2311,7 @@ function openServiceModal(id){
   // m-cl usa buscarClienteDB() directamente (no setupAC)
   setupAC('m-zona', 'm-zona-list', ()=>db.zonas);
   renderItemsList();
+  setTimeout(verificarConflictoHora, 200);
   // Inicializar link de Maps y actualizar cuando cambia la zona
   setTimeout(()=>{
     updateMapsLink();
@@ -2278,7 +2339,22 @@ function addItem(){
   setTimeout(()=>{ const el=document.getElementById('idd-'+i); if(el) el.focus(); }, 50);
 }
 function removeItem(i){ syncItems(); modalItems.splice(i,1); if(!modalItems.length) modalItems.push({qty:1,desc:'',importe:'',tipo:'ingreso'}); renderItemsList(); }
-function cycleType(i){ syncItems(); const T=['ingreso','costo','gasto']; modalItems[i].tipo=T[(T.indexOf(modalItems[i].tipo||'ingreso')+1)%3]; renderItemsList(); }
+function cycleType(i){
+  syncItems();
+  const T=['ingreso','costo','gasto'];
+  modalItems[i].tipo = T[(T.indexOf(modalItems[i].tipo||'ingreso')+1)%3];
+  // Actualizar data-tipo en el botón sin re-renderizar todo
+  const rows = document.querySelectorAll('.irow');
+  if(rows[i]){
+    const btn = rows[i].querySelector('.tbtn');
+    if(btn){
+      btn.dataset.tipo = modalItems[i].tipo;
+      btn.className = 'tbtn '+modalItems[i].tipo;
+      btn.textContent = modalItems[i].tipo.charAt(0).toUpperCase()+modalItems[i].tipo.slice(1);
+    }
+  }
+  updateResumen();
+}
 function syncItems(){
   document.querySelectorAll('.irow').forEach((row,i)=>{
     if(i>=modalItems.length) return;
@@ -2322,10 +2398,28 @@ function syncAndRefresh(){
 let repartoEditado = {}; // {tecId: valor} solo los que el usuario tocó
 
 function updateResumen(){
-  syncItems();
   const el = document.getElementById('resumen-box');
   if(!el) return;
-  const sum = tipo => modalItems.filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
+  // Sincronizar modalItems con los valores actuales del DOM
+  document.querySelectorAll('.irow').forEach(function(row, i){
+    if(i>=modalItems.length) return;
+    var q=row.querySelector('.iq'), im=row.querySelector('.ii');
+    if(q)  modalItems[i].qty     = q.value;
+    if(im) modalItems[i].importe = im.value;
+    // El tipo NO se sobreescribe acá — lo maneja cycleType
+  });
+  // Calcular sumas usando modalItems (tiene el tipo correcto) + DOM (tiene el importe actualizado)
+  const sum = tipo => {
+    let total = 0;
+    document.querySelectorAll('.irow').forEach(function(row, i){
+      var tipoVal = modalItems[i] ? (modalItems[i].tipo||'ingreso') : 'ingreso';
+      if(tipoVal !== tipo) return;
+      var imp = Number((row.querySelector('.ii')||{}).value||0);
+      var qty = Number((row.querySelector('.iq')||{}).value||1);
+      total += imp * qty;
+    });
+    return total;
+  };
   const ing=sum('ingreso'), cos=sum('costo'), gas=sum('gasto');
   const totC=ing+cos, base=ing-gas;
   const selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
@@ -2344,13 +2438,27 @@ function updateResumen(){
       'oninput="onRepartoInput(this,\''+id+'\')"></div>';
   }).join('');
 
-  el.innerHTML = '<div class="resumen">' +
-    '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
-    '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
-    '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
-    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (selTecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:12px;font-weight:600;color:var(--text3)">Reparto por técnico (editable)</div><button onclick="resetReparto()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);cursor:pointer">↺ Reset</button></div>'+tecRows+'</div>' : '') +
+  el.innerHTML =
+    // ── TOTAL ───────────────────────────────────────────────────────
+    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
+      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
+    '</div>' +
+    // ── DESGLOSE INTERNO ────────────────────────────────────────────
+    '<div class="resumen" style="margin-top:10px">' +
+      '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
+      '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
+      '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
+      '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
+      '<div class="rrow tot"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+      (selTecs.length ?
+        '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
+            '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Reparto por técnico</div>' +
+            '<button onclick="resetReparto()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--blue);border-radius:var(--radius-sm);background:var(--blue-light);color:var(--blue-text);font-size:13px;font-weight:700;cursor:pointer">Repartir</button>' +
+          '</div>' +
+          tecRows +
+        '</div>' : '') +
     '</div>';
 }
 
@@ -2394,6 +2502,134 @@ function onRepartoInput(inp, editedId){
     const el = document.getElementById('rep-'+id);
     if(el) el.value = vals[id];
   });
+}
+
+function nuevoEquipoDesdeModal(){
+  var clienteNombre = (document.getElementById('m-cl')||{}).value||'';
+  if(!clienteNombre.trim()){ showAlert('Seleccioná un cliente primero'); return; }
+  // Guardar estado del pedido
+  syncItems();
+  window._estadoPedidoGuardado = {
+    id:       window._editingServiceId,
+    cliente:  (document.getElementById('m-cl')||{}).value||'',
+    tel:      (document.getElementById('m-tel')||{}).value||'',
+    dir:      (document.getElementById('m-dir')||{}).value||'',
+    zona:     (document.getElementById('m-zona')||{}).value||'',
+    tipo:     (document.getElementById('m-tipo')||{}).value||'',
+    estado:   (document.getElementById('m-est')||{}).value||'',
+    fecha:    (document.getElementById('m-fecha')||{}).value||'',
+    hora:     (document.getElementById('m-hora')||{}).value||'',
+    desc:     (document.getElementById('m-desc')||{}).value||'',
+    tecnicos: [...document.querySelectorAll('#chips-tec .chip.sel')].map(function(c){ return c.dataset.tid; }),
+    items:    JSON.parse(JSON.stringify(modalItems)),
+  };
+  window._nuevoEquipoCliente = clienteNombre;
+  // Abrir formulario de nuevo equipo
+  const TIPOS_EQ = ['Split','Central','Cassette','Piso-Techo','Ventana','Heladera','Lavarropas','Lavavajillas','Otro'];
+  const GASES    = ['R410A','R32','R22','R404A','R134a','R600a','Otro'];
+  var tOpts = TIPOS_EQ.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+  var gOpts = GASES.map(function(g){ return '<option>'+g+'</option>'; }).join('');
+  var html = '<div class="mtitle">Nuevo equipo</div>';
+  html += '<div style="font-size:13px;color:var(--text2);margin-bottom:12px">Cliente: <strong>'+escH(clienteNombre)+'</strong></div>';
+  html += '<div class="frow"><div class="field"><label>Tipo *</label><select id="eq-tipo">'+tOpts+'</select></div>';
+  html += '<div class="field"><label>Ubicación</label><input id="eq-ubic" placeholder="Ej: Living, Cocina"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Marca</label><input id="eq-marca" placeholder="Ej: Carrier"></div>';
+  html += '<div class="field"><label>Modelo</label><input id="eq-modelo" placeholder="Ej: 42KCC012DS"></div></div>';
+  html += '<div class="frow"><div class="field"><label>N° de serie</label><input id="eq-serie" placeholder="Número de serie"></div>';
+  html += '<div class="field"><label>Capacidad</label><input id="eq-cap" placeholder="Ej: 3000 frigorías"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Tipo de gas</label><select id="eq-gas">'+gOpts+'</select></div>';
+  html += '<div class="field"><label>Fecha instalación</label><input type="date" id="eq-inst"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Frecuencia mantenimiento (meses)</label><input type="number" id="eq-freq" value="6" min="1"></div>';
+  html += '<div class="field"><label>Próximo servicio</label><input type="date" id="eq-prox"></div></div>';
+  html += '<div class="mfoot"><button class="btn" onclick="cancelarNuevoEquipo()">Cancelar</button>';
+  html += '<button class="btn btn-primary" onclick="guardarNuevoEquipoDesdeModal()">Guardar equipo</button></div>';
+  showModal(html);
+}
+
+function cancelarNuevoEquipo(){
+  closeModal();
+  var ep = window._estadoPedidoGuardado;
+  if(ep) setTimeout(function(){ restaurarPedido(ep); }, 50);
+}
+
+function guardarNuevoEquipoDesdeModal(){
+  var clienteNombre = window._nuevoEquipoCliente||'';
+  var freq = parseInt((document.getElementById('eq-freq')||{}).value||6);
+  var prox = (document.getElementById('eq-prox')||{}).value||'';
+  if(!prox){ var d=new Date(); d.setMonth(d.getMonth()+freq); prox=d.toISOString().split('T')[0]; }
+  var data = {
+    id: 'eq_'+Date.now(),
+    cliente: clienteNombre,
+    tipo: (document.getElementById('eq-tipo')||{}).value||'Split',
+    marca: ((document.getElementById('eq-marca')||{}).value||'').trim(),
+    modelo: ((document.getElementById('eq-modelo')||{}).value||'').trim(),
+    serie: ((document.getElementById('eq-serie')||{}).value||'').trim(),
+    capacidad: ((document.getElementById('eq-cap')||{}).value||'').trim(),
+    gas: (document.getElementById('eq-gas')||{}).value||'R410A',
+    ubicacion: ((document.getElementById('eq-ubic')||{}).value||'').trim(),
+    fechaInstalacion: (document.getElementById('eq-inst')||{}).value||'',
+    frecuenciaMeses: freq,
+    proximoServicio: prox,
+    notas: '', historial: []
+  };
+  if(!db.equiposDB) db.equiposDB=[];
+  db.equiposDB.push(data);
+  saveDB();
+  actualizarBadgeEquipos();
+  closeModal();
+  var ep = window._estadoPedidoGuardado;
+  window._nuevoEquipoRecienCreado = data.id;
+  setTimeout(function(){ if(ep) restaurarPedido(ep); }, 50);
+}
+
+function restaurarPedido(ep){
+  openServiceModal(ep.id||null);
+  setTimeout(function(){
+    var set = function(id,val){ var el=document.getElementById(id); if(el&&val!==undefined) el.value=val; };
+    set('m-cl',   ep.cliente);
+    set('m-tel',  ep.tel);
+    set('m-dir',  ep.dir);
+    set('m-zona', ep.zona);
+    set('m-tipo', ep.tipo);
+    set('m-est',  ep.estado);
+    set('m-fecha',ep.fecha);
+    set('m-hora', ep.hora);
+    set('m-desc', ep.desc);
+    if(ep.tecnicos && ep.tecnicos.length){
+      document.querySelectorAll('#chips-tec .chip').forEach(function(c){
+        c.classList.toggle('sel', ep.tecnicos.indexOf(c.dataset.tid)>=0);
+      });
+    }
+    if(ep.items && ep.items.length){ modalItems=ep.items; renderItemsList(); }
+    // Seleccionar el nuevo equipo si fue creado
+    actualizarSelectorEquipo(ep.cliente);
+    setTimeout(function(){
+      var sel=document.getElementById('m-equipo');
+      if(sel && window._nuevoEquipoRecienCreado){ sel.value=window._nuevoEquipoRecienCreado; window._nuevoEquipoRecienCreado=null; }
+      updateResumen();
+    }, 150);
+    window._estadoPedidoGuardado = null;
+  }, 200);
+}
+
+function verificarConflictoHora(){
+  var fecha = (document.getElementById('m-fecha')||{}).value||'';
+  var hora  = (document.getElementById('m-hora')||{}).value||'';
+  var warnEl = document.getElementById('hora-conflict-warn');
+  if(!warnEl) return;
+  if(!fecha || !hora){ warnEl.style.display='none'; return; }
+  // Buscar pedidos en esa fecha y hora (excluyendo el actual si se está editando)
+  var editingId = window._editingServiceId ? Number(window._editingServiceId) : null;
+  var conflictos = db.servicios.filter(function(s){
+    return !s.facturado && s.fecha===fecha && s.hora===hora && Number(s.id)!==editingId;
+  });
+  if(conflictos.length){
+    var nombres = conflictos.map(function(s){ return s.cliente; }).join(', ');
+    warnEl.textContent = '⚠️ Ya hay un pedido a esa hora: '+nombres;
+    warnEl.style.display = 'block';
+  } else {
+    warnEl.style.display = 'none';
+  }
 }
 
 function saveService(id){
