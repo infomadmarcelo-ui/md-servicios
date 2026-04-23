@@ -4,13 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Servicios">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gestión de Servicios">
 <meta name="theme-color" content="#1a3a6b">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Gestión de Servicios</title>
 <style>
 :root{
@@ -183,13 +182,18 @@ button{cursor:pointer}
       <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:160px;height:160px">
         <circle cx="60" cy="60" r="57" fill="#1a3a6b"/>
         <path id="arcTop" d="M 14,60 A 46,46 0 0,1 106,60" fill="none"/>
-        <text font-family="-apple-system,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">CLIMATIZACIÓN</textPath></text>
+        <text font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">CLIMATIZACIÓN</textPath></text>
         <path id="arcBot" d="M 14,60 A 46,46 0 0,0 106,60" fill="none"/>
-        <text font-family="-apple-system,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">ELECTRICIDAD</textPath></text>
+        <text font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">ELECTRICIDAD</textPath></text>
         <g transform="translate(60,34)" stroke="#fff" stroke-width="1.6" stroke-linecap="round">
           <line x1="0" y1="-6" x2="0" y2="6"/><line x1="-5.2" y1="-3" x2="5.2" y2="3"/><line x1="-5.2" y1="3" x2="5.2" y2="-3"/>
+          <line x1="-2.5" y1="-5" x2="0" y2="-6"/><line x1="2.5" y1="-5" x2="0" y2="-6"/>
+          <line x1="4.2" y1="1" x2="5.2" y2="3"/><line x1="3" y1="4" x2="5.2" y2="3"/>
+          <line x1="-4.2" y1="1" x2="-5.2" y2="3"/><line x1="-3" y1="4" x2="-5.2" y2="3"/>
+          <line x1="-2.5" y1="5" x2="0" y2="6"/><line x1="2.5" y1="5" x2="0" y2="6"/>
+          <line x1="4.2" y1="-1" x2="5.2" y2="-3"/><line x1="-4.2" y1="-1" x2="-5.2" y2="-3"/>
         </g>
-        <text x="60" y="68" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="32" font-weight="700" fill="#fff" letter-spacing="10" textLength="62" lengthAdjust="spacing">MD</text>
+        <text x="60" y="68" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="32" font-weight="700" fill="#fff" letter-spacing="10" textLength="62" lengthAdjust="spacing">MD</text>
         <g transform="translate(60,87)"><polygon points="-4.5,-9 2.5,-9 -1.5,0 4.5,0 -4.5,11 -1,1.5 -6.5,1.5" fill="#fff"/></g>
       </svg>
     </div>
@@ -318,7 +322,6 @@ const ROLES = {
 
 // ── SYNC STATE ────────────────────────────────────────────────────────
 var _syncUnsubscribe = null; // función para cancelar listener de Firestore
-var _syncPending = false;    // hay cambios locales pendientes de subir
 
 // ── FIREBASE AUTH ─────────────────────────────────────────────────────
 auth.onAuthStateChanged(function(user){
@@ -449,7 +452,7 @@ let db = {
     condicionesPago: '50% al inicio del trabajo, 50% a la finalización',
     garantia: '90 días en mano de obra',
   },
-  tecnicos: [{id:'carl',nombre:'Carl',pct:50},{id:'leni',nombre:'Leni',pct:50}],
+  tecnicos: [{id:'marcelo',nombre:'Marcelo',pct:50},{id:'gabriel',nombre:'Gabriel',pct:50}],
   clientesDB: [], equiposDB: [], clientes: [], zonas: [], itemDescs: []
 };
 
@@ -459,7 +462,7 @@ function loadDB(){
     const r = localStorage.getItem(KEY);
     if(r){
       db = JSON.parse(r);
-      if(!db.tecnicos || !db.tecnicos.length) db.tecnicos = [{id:'carl',nombre:'Carl',pct:50},{id:'leni',nombre:'Leni',pct:50}];
+      if(!db.tecnicos || !db.tecnicos.length) db.tecnicos = [{id:'marcelo',nombre:'Marcelo',pct:50},{id:'gabriel',nombre:'Gabriel',pct:50}];
       if(!db.nextId) db.nextId = 1;
       ['clientes','zonas','itemDescs','clientesDB','equiposDB'].forEach(k=>{ if(!db[k]) db[k] = []; });
       if(!db.config) db.config = {
@@ -539,15 +542,12 @@ function showAlert(msg){
 
 
 // ── CALCULADORA FLOTANTE ─────────────────────────────────────────────
-var _calcExpr = '';
-var _calcDisplay = '0';
+var _calcInput = ''; // expresión completa que el usuario va armando
 
 function abrirCalculadora(){
   _calcInput = '';
   renderCalc();
 }
-
-var _calcInput = ''; // expresión completa que el usuario va armando
 
 function fmtCalc(val){
   // Formatea número con puntos de miles y coma decimal (estilo argentino)
@@ -699,12 +699,11 @@ function _updateCalc(){
   if(resEl) resEl.textContent = preview ? fmtCalc(preview) : '';
 }
 
-// Mantener compatibilidad (ya no se usan pero evitan errores)
+// Mantener compatibilidad (alias hacia calcAppend)
 function calcNum(n){ calcAppend(n); }
 function calcOp(o){ calcAppend(o); }
 function calcParen(p){ calcAppend(p); }
 function calcPct(){ calcAppend('%'); }
-var _calcExpr='', _calcDisplay='0';
 
 
 
@@ -2782,21 +2781,57 @@ function abrirConfiguracion(){
   html += '<div class="field"><label>Leyenda pie de presupuesto</label><textarea id="cfg-pie" placeholder="Texto que aparece al pie del presupuesto">'+escH(c.piePresupuesto||'')+'</textarea></div>';
 
   html += '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">';
-  html += '<div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:10px">LOGO DE LA EMPRESA</div>';
-  html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">';
-  // Preview del logo actual
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:4px">IMÁGENES DE LA APP</div>';
+  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:14px">Las imágenes se usan en distintos lugares de la app. Cada una tiene requisitos diferentes.</div>';
+
+  // ── 1. LOGO DE LA EMPRESA ──────────────────────────────────────────
   var logoActual = (db.config && db.config.logo) ? db.config.logo : '';
+  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:12px">';
+  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
+  // Preview
+  html += '<div style="flex-shrink:0">';
   if(logoActual){
-    html += '<img src="'+logoActual+'" style="width:72px;height:72px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">';
+    html += '<img src="'+logoActual+'" style="width:80px;height:80px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">';
   } else {
-    html += '<div style="width:72px;height:72px;border-radius:8px;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px;text-align:center">Sin logo</div>';
+    html += '<div style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border2);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+    html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    html += '<span style="font-size:10px;color:var(--text3);text-align:center">Sin logo</span></div>';
   }
-  html += '<div style="flex:1">';
-  html += '<label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">📁 Seleccionar imagen<input type="file" id="cfg-logo-input" accept="image/png,image/jpeg,image/jpg,image/svg+xml" style="display:none" onchange="previewLogo(this)"></label>';
-  html += '<div style="font-size:11px;color:var(--text3);margin-top:6px">PNG o JPG · fondo transparente o blanco · mínimo 200×200px · máximo 500KB</div>';
-  if(logoActual) html += '<button class="btn btn-xs btn-danger" style="margin-top:6px" onclick="quitarLogo()">Quitar logo</button>';
-  html += '</div></div>';
-  html += '<div id="cfg-logo-preview" style="margin-bottom:4px"></div>';
+  html += '</div>';
+  // Info
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">1 · Logo de la empresa</div>';
+  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se muestra en los <strong>presupuestos PDF</strong>, en la <strong>pantalla de login</strong> y en la <strong>barra superior</strong> de la app.<br>Formato: PNG o JPG · Fondo blanco o transparente · Cuadrado · Mínimo 200×200 px · Máximo 500 KB</div>';
+  html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+  html += '<label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">📁 Seleccionar imagen<input type="file" id="cfg-logo-input" accept="image/png,image/jpeg,image/jpg" style="display:none" onchange="previewLogo(this)"></label>';
+  if(logoActual) html += '<button class="btn btn-xs btn-danger" onclick="quitarLogo()">Quitar logo</button>';
+  html += '</div>';
+  html += '<div id="cfg-logo-preview" style="margin-top:8px"></div>';
+  html += '</div></div></div>';
+
+  // ── 2. ÍCONO PWA 192×192 ──────────────────────────────────────────
+  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:12px">';
+  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
+  html += '<div style="flex-shrink:0;width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+  html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg>';
+  html += '<span style="font-size:10px;color:var(--text3);text-align:center">icon-192</span></div>';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">2 · Ícono de la app (192×192 px)</div>';
+  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se usa cuando alguien instala la app en <strong>Android</strong> o en el menú de apps de Chrome. También es el ícono de acceso directo.<br>Formato: PNG · Fondo sólido (preferentemente azul <code style="background:var(--surface);padding:1px 5px;border-radius:3px">#1a3a6b</code>) · Exactamente <strong>192×192 px</strong> · Máximo 200 KB<br>Nombre del archivo: <code style="background:var(--surface);padding:1px 5px;border-radius:3px">icon-192.png</code> · Se sube a GitHub junto con el index.html</div>';
+  html += '<div class="alert ai" style="font-size:12px;padding:8px 12px;margin:0">⚠️ Este archivo se sube manualmente a GitHub. No se guarda aquí.</div>';
+  html += '</div></div></div>';
+
+  // ── 3. ÍCONO PWA 512×512 ──────────────────────────────────────────
+  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:4px">';
+  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
+  html += '<div style="flex-shrink:0;width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
+  html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>';
+  html += '<span style="font-size:10px;color:var(--text3);text-align:center">icon-512</span></div>';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">3 · Ícono splash screen (512×512 px)</div>';
+  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se usa en la <strong>pantalla de carga</strong> (splash screen) cuando se abre la app instalada en Android, y como miniatura en tiendas si la app fuera publicada.<br>Formato: PNG · Mismo diseño que el de 192 px pero más grande · Exactamente <strong>512×512 px</strong> · Máximo 500 KB<br>Nombre del archivo: <code style="background:var(--surface);padding:1px 5px;border-radius:3px">icon-512.png</code> · Se sube a GitHub junto con el index.html</div>';
+  html += '<div class="alert ai" style="font-size:12px;padding:8px 12px;margin:0">⚠️ Este archivo se sube manualmente a GitHub. No se guarda aquí.</div>';
+  html += '</div></div></div>';
 
   html += '<div class="mfoot">';
   html += '<button class="btn" onclick="closeModal()">Cancelar</button>';
