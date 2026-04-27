@@ -1563,10 +1563,8 @@ function generarPDF(id){
   const botonesHtml = `
   <div style="font-family:Arial,sans-serif;display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#f1f5f9;border-bottom:2px solid #1a3a6b;align-items:center">
     <span style="font-size:12px;color:#475569;font-weight:600;flex:1">Presupuesto ${nro} · ${s.cliente}</span>
+    <span style="font-size:11px;color:#64748b;display:flex;align-items:center">💡 En Chrome: activá <strong style='margin:0 3px'>"Gráficos de fondo"</strong> para ver los colores</span>
     <button onclick="window.print()" style="padding:8px 16px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>
-  <span style="font-size:11px;color:#64748b;display:flex;align-items:center">💡 En Chrome: activá <strong style='margin:0 3px'>"Gráficos de fondo"</strong> para ver los colores</span>
-    <a href="https://wa.me/?text=${encodeURIComponent('Presupuesto de servicio técnico MD\nCliente: '+s.cliente+'\nDirección: '+(s.direccion||'')+'\nTotal: $'+fmtN(f.totalCliente)+'\n\nDetalle completo adjunto.')}" target="_blank" style="padding:8px 16px;background:#25D366;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none">📱 WhatsApp</a>
-    <a href="mailto:?subject=${encodeURIComponent('Presupuesto '+nro+' - Marcelo Duarte')}&body=${encodeURIComponent('Estimado/a '+s.cliente+',\n\nAdjunto encontrará el presupuesto N° '+nro+' por los servicios solicitados.\n\nTotal: $'+fmtN(f.totalCliente)+'\n\nSaludos,\nMarcelo Duarte\nClimatización & Electricidad')}" style="padding:8px 16px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none">✉️ Email</a>
   </div>`;
 
   const fullHtml = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Presupuesto '+nro+'</title><style>*{box-sizing:border-box;margin:0;padding:0}-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}body{background:#e2e8f0;font-family:Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}@media screen{.pdf-wrap{max-width:794px;margin:60px auto;box-shadow:0 4px 20px rgba(0,0,0,.2)}}@media print{.no-print{display:none!important}body{background:#fff}.pdf-wrap{margin:0;box-shadow:none;max-width:100%}@page{size:A4;margin:10mm}}</style></head><body><div class="no-print">'+botonesHtml+'</div><div style="background:#fff;max-width:794px;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact">'+html+'</div></body></html>';  const blob = new Blob([fullHtml], {type:'text/html;charset=utf-8'});
@@ -2342,7 +2340,7 @@ function cycleType(i){
   syncItems();
   const T=['ingreso','costo','gasto'];
   modalItems[i].tipo = T[(T.indexOf(modalItems[i].tipo||'ingreso')+1)%3];
-  // Actualizar data-tipo en el botón sin re-renderizar todo
+  if(modalItems[i].tipo !== 'costo') modalItems[i].adelantos = {};
   const rows = document.querySelectorAll('.irow');
   if(rows[i]){
     const btn = rows[i].querySelector('.tbtn');
@@ -2350,6 +2348,75 @@ function cycleType(i){
       btn.dataset.tipo = modalItems[i].tipo;
       btn.className = 'tbtn '+modalItems[i].tipo;
       btn.textContent = modalItems[i].tipo.charAt(0).toUpperCase()+modalItems[i].tipo.slice(1);
+    }
+    renderAdelantoRow(i, rows[i]);
+  }
+  updateResumen();
+}
+
+function renderAdelantoRow(i, rowEl){
+  var existing = rowEl.parentNode.querySelector('#adelanto-row-'+i);
+  var tipo = modalItems[i].tipo;
+  if(tipo !== 'costo'){
+    if(existing) existing.remove();
+    return;
+  }
+  var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
+  if(!selTecs.length){ if(existing) existing.remove(); return; }
+  var adelantos = modalItems[i].adelantos || {};
+  var totalItem = Number(modalItems[i].importe||0) * Number(modalItems[i].qty||1);
+  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var diferencia = totalItem - totalAdelantado;
+  var estadoColor = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
+  var estadoTxt = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
+  var tecInputs = selTecs.map(function(id){
+    var t = db.tecnicos.find(function(x){ return x.id===id; });
+    var nombre = t ? t.nombre : id;
+    var val = adelantos[id] || '';
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+      '<span style="min-width:72px;font-size:12px;font-weight:600;color:var(--text2)">'+nombre+'</span>' +
+      '<input type="number" min="0" value="'+val+'" placeholder="0" ' +
+      'style="flex:1;padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px" ' +
+      'oninput="onAdelantoInput('+i+',\''+id+'\',this.value)">' +
+    '</div>';
+  }).join('');
+  var html = '<div id="adelanto-row-'+i+'" style="margin:-2px 0 8px 0;padding:10px 12px;background:var(--blue-light);border:1.5px solid var(--border2);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm)">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\uD83D\uDCB8 \u00BFQui\u00E9n adelant\u00F3 este importe?</div>' +
+    tecInputs +
+    '<div class="adelanto-estado" style="font-size:11px;font-weight:600;color:'+estadoColor+';margin-top:6px;text-align:right">'+estadoTxt+'</div>' +
+  '</div>';
+  if(existing){
+    existing.outerHTML = html;
+  } else {
+    rowEl.insertAdjacentHTML('afterend', html);
+  }
+}
+
+function onAdelantoInput(itemIdx, tecId, val){
+  if(!modalItems[itemIdx].adelantos) modalItems[itemIdx].adelantos = {};
+  modalItems[itemIdx].adelantos[tecId] = Number(val||0);
+  // Solo actualizar el texto de estado sin re-renderizar (para no perder el foco)
+  var adelantos = modalItems[itemIdx].adelantos;
+  var totalItem = Number(modalItems[itemIdx].importe||0) * Number(modalItems[itemIdx].qty||1);
+  var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
+  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var diferencia = totalItem - totalAdelantado;
+  var estadoEl = document.querySelector('#adelanto-row-'+itemIdx+' .adelanto-estado');
+  if(estadoEl){
+    estadoEl.style.color = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
+    estadoEl.textContent = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
+    // Si está completo, cerrar el bloque después de un momento
+    if(Math.abs(diferencia) < 1){
+      var bloqueId = '#adelanto-row-'+itemIdx;
+      setTimeout(function(){
+        var bloque = document.querySelector(bloqueId);
+        if(!bloque) return;
+        bloque.style.transition = 'opacity .4s, max-height .4s';
+        bloque.style.overflow = 'hidden';
+        bloque.style.opacity = '0';
+        bloque.style.maxHeight = '0';
+        bloque.style.padding = '0 12px';
+      }, 800);
     }
   }
   updateResumen();
@@ -2376,6 +2443,9 @@ function renderItemsList(){
     '</div>'
   ).join('');
   modalItems.forEach((_,i)=>setupAC('idd-'+i,'idd-list-'+i,()=>db.itemDescs));
+  // Renderizar bloques de adelanto para ítems costo/gasto existentes
+  const rows = document.querySelectorAll('.irow');
+  modalItems.forEach(function(item,i){ if(item.tipo === 'costo' && rows[i]) renderAdelantoRow(i, rows[i]); });
   updateResumen();
 }
 function syncAndRefresh(){
@@ -2427,14 +2497,28 @@ function updateResumen(){
   // Calcular valores: editados usan repartoEditado, el resto reparte el sobrante
   const vals = calcReparto(selTecs, base);
 
+  // Calcular adelantos por técnico (suma de todos los ítems costo/gasto)
+  const adelantosPorTec = {};
+  modalItems.forEach(function(item){
+    if(item.tipo !== 'costo') return;
+    var adv = item.adelantos || {};
+    selTecs.forEach(function(id){ adelantosPorTec[id] = (adelantosPorTec[id]||0) + Number(adv[id]||0); });
+  });
+
   let tecRows = selTecs.map((id,i)=>{
     const t = db.tecnicos.find(x=>x.id===id);
     const nombre = t ? t.nombre : id;
-    return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px">' +
+    const adv = adelantosPorTec[id] || 0;
+    const total = vals[id] + adv;
+    const advStr = adv > 0 ? '<span style="font-size:11px;color:var(--blue-text);font-weight:600;white-space:nowrap">+$'+fmt(adv)+' mat</span>' : '';
+    const totalStr = adv > 0 ? '<span style="font-size:12px;font-weight:800;color:var(--green-text);white-space:nowrap">=$'+fmt(total)+'</span>' : '';
+    return '<div style="margin-top:6px"><div style="display:flex;align-items:center;gap:6px">' +
       '<span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+nombre+'</span>' +
       '<input type="number" id="rep-'+id+'" value="'+vals[id]+'" ' +
       'style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none" ' +
-      'oninput="onRepartoInput(this,\''+id+'\')"></div>';
+      'oninput="onRepartoInput(this,\''+id+'\')">'+
+      advStr + totalStr +
+    '</div></div>';
   }).join('');
 
   el.innerHTML =
@@ -2752,8 +2836,36 @@ function showModal(html){
   const root = document.getElementById('modal-root');
   root.innerHTML = '';
   root.appendChild(ov);
+  // Push estado para que el botón Atrás del teléfono cierre el modal
+  history.pushState({modal:true}, '');
 }
-function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
+function closeModal(){
+  document.getElementById('modal-root').innerHTML = '';
+  // Si el estado actual es de modal, volver al estado anterior sin disparar el evento
+  if(history.state && history.state.modal) history.back();
+}
+
+// ── BOTÓN ATRÁS DEL TELÉFONO ────────────────────────────────────────
+window.addEventListener('popstate', function(e){
+  var modalRoot = document.getElementById('modal-root');
+  // Si hay un modal abierto, cerrarlo sin confirmación
+  if(modalRoot && modalRoot.innerHTML.trim() !== ''){
+    modalRoot.innerHTML = '';
+    return;
+  }
+  // Si no hay modal, preguntar si quiere salir de la app
+  if(currentUser){
+    if(confirm('¿Salir de la aplicación?')){
+      auth.signOut();
+    } else {
+      // Volver a poner el estado para que el botón atrás funcione de nuevo
+      history.pushState(null, '');
+    }
+  }
+});
+
+// Inicializar estado del historial al cargar
+history.pushState(null, '');
 
 
 // ── CONFIGURACIÓN ─────────────────────────────────────────────────────
