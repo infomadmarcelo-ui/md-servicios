@@ -2839,27 +2839,33 @@ function showModal(html){
   // Push estado para que el botón Atrás del teléfono cierre el modal
   history.pushState({modal:true}, '');
 }
+var _closingModal = false; // bandera para ignorar popstate interno
+
 function closeModal(){
   document.getElementById('modal-root').innerHTML = '';
-  // Si el estado actual es de modal, volver al estado anterior sin disparar el evento
-  if(history.state && history.state.modal) history.back();
+  if(history.state && history.state.modal){
+    _closingModal = true;
+    history.back();
+  }
 }
 
 // ── BOTÓN ATRÁS DEL TELÉFONO ────────────────────────────────────────
 window.addEventListener('popstate', function(e){
+  // Si lo disparó closeModal internamente, ignorar
+  if(_closingModal){ _closingModal = false; return; }
+
   var modalRoot = document.getElementById('modal-root');
   // Si hay un modal abierto, cerrarlo sin confirmación
   if(modalRoot && modalRoot.innerHTML.trim() !== ''){
     modalRoot.innerHTML = '';
+    history.pushState(null, ''); // reponer estado
     return;
   }
   // Si no hay modal, preguntar si quiere salir de la app
   if(currentUser){
+    history.pushState(null, ''); // reponer estado antes de preguntar
     if(confirm('¿Salir de la aplicación?')){
       auth.signOut();
-    } else {
-      // Volver a poner el estado para que el botón atrás funcione de nuevo
-      history.pushState(null, '');
     }
   }
 });
