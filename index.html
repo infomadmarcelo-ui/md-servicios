@@ -336,6 +336,8 @@ auth.onAuthStateChanged(function(user){
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     history.pushState({modal:false}, '');
+    // Pre-cargar clima en segundo plano para que esté listo al abrir Agenda
+    setTimeout(fetchClima, 1000);
     document.getElementById('topbar-user').textContent = userName(role);
     var menuTec = document.getElementById('menu-tecnicos-item');
     if(menuTec) menuTec.style.display = isAdmin() ? 'flex' : 'none';
@@ -2244,9 +2246,8 @@ function renderAgenda(){
     '<div id="cal-grid-wrap"></div>' +
     '<div id="cal-day-detail" style="margin-top:14px"></div>';
   renderCal();
-  // Usar datos cacheados o fetchear
   if(_climaData) renderClimaWidget();
-  else fetchClima();
+  else if(!_climaLoading) fetchClima();
 }
 function changeMonth(d){ calM+=d; if(calM>11){calM=0;calY++;}else if(calM<0){calM=11;calY--;} renderCal(); renderClimaWidget(); }
 function calDayColor(cnt){
