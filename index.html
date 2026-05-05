@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Gestión de Servicios">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Servicios">
 <meta name="theme-color" content="#1a3a6b">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
 <title>Gestión de Servicios</title>
 <style>
 :root{
@@ -29,7 +30,7 @@
   --yellow-light:#451a03;--yellow-text:#fcd34d;
   --red-light:#450a0a;--red-text:#fca5a5;
 }}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}input[type=number]{-moz-appearance:textfield}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;background:var(--bg);color:var(--text)}
 input,select,textarea,button{font-family:inherit;font-size:inherit}
 button{cursor:pointer}
@@ -173,6 +174,7 @@ button{cursor:pointer}
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -182,28 +184,23 @@ button{cursor:pointer}
       <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="width:160px;height:160px">
         <circle cx="60" cy="60" r="57" fill="#1a3a6b"/>
         <path id="arcTop" d="M 14,60 A 46,46 0 0,1 106,60" fill="none"/>
-        <text font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">CLIMATIZACIÓN</textPath></text>
+        <text font-family="-apple-system,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">CLIMATIZACIÓN</textPath></text>
         <path id="arcBot" d="M 14,60 A 46,46 0 0,0 106,60" fill="none"/>
-        <text font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">ELECTRICIDAD</textPath></text>
+        <text font-family="-apple-system,sans-serif" font-size="8.5" font-weight="600" fill="#fff" letter-spacing="2.5"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">ELECTRICIDAD</textPath></text>
         <g transform="translate(60,34)" stroke="#fff" stroke-width="1.6" stroke-linecap="round">
           <line x1="0" y1="-6" x2="0" y2="6"/><line x1="-5.2" y1="-3" x2="5.2" y2="3"/><line x1="-5.2" y1="3" x2="5.2" y2="-3"/>
-          <line x1="-2.5" y1="-5" x2="0" y2="-6"/><line x1="2.5" y1="-5" x2="0" y2="-6"/>
-          <line x1="4.2" y1="1" x2="5.2" y2="3"/><line x1="3" y1="4" x2="5.2" y2="3"/>
-          <line x1="-4.2" y1="1" x2="-5.2" y2="3"/><line x1="-3" y1="4" x2="-5.2" y2="3"/>
-          <line x1="-2.5" y1="5" x2="0" y2="6"/><line x1="2.5" y1="5" x2="0" y2="6"/>
-          <line x1="4.2" y1="-1" x2="5.2" y2="-3"/><line x1="-4.2" y1="-1" x2="-5.2" y2="-3"/>
         </g>
-        <text x="60" y="68" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="32" font-weight="700" fill="#fff" letter-spacing="10" textLength="62" lengthAdjust="spacing">MD</text>
+        <text x="60" y="68" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="32" font-weight="700" fill="#fff" letter-spacing="10" textLength="62" lengthAdjust="spacing">MD</text>
         <g transform="translate(60,87)"><polygon points="-4.5,-9 2.5,-9 -1.5,0 4.5,0 -4.5,11 -1,1.5 -6.5,1.5" fill="#fff"/></g>
       </svg>
     </div>
     <div class="ltitle" style="text-align:center;margin-bottom:2px">Gestión de Servicios</div>
     <div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:20px">Marcelo Duarte</div>
     <div class="field"><label>Email</label>
-      <input type="email" id="login-email" placeholder="usuario@md-servicios.com" autocomplete="email">
+      <input type="email" id="login-email" placeholder="usuario@md-servicios.com" autocomplete="email" onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()">
     </div>
     <div class="field"><label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()">
     </div>
     <div id="login-error" style="color:var(--red-text);font-size:13px;margin-bottom:8px;display:none;text-align:center"></div>
     <button class="btn btn-primary btn-block" id="login-btn" onclick="doLogin()">Ingresar</button>
@@ -338,6 +335,7 @@ auth.onAuthStateChanged(function(user){
     }
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').classList.add('visible');
+    history.pushState({modal:false}, '');
     document.getElementById('topbar-user').textContent = userName(role);
     var menuTec = document.getElementById('menu-tecnicos-item');
     if(menuTec) menuTec.style.display = isAdmin() ? 'flex' : 'none';
@@ -542,12 +540,15 @@ function showAlert(msg){
 
 
 // ── CALCULADORA FLOTANTE ─────────────────────────────────────────────
-var _calcInput = ''; // expresión completa que el usuario va armando
+var _calcExpr = '';
+var _calcDisplay = '0';
 
 function abrirCalculadora(){
   _calcInput = '';
   renderCalc();
 }
+
+var _calcInput = ''; // expresión completa que el usuario va armando
 
 function fmtCalc(val){
   // Formatea número con puntos de miles y coma decimal (estilo argentino)
@@ -699,11 +700,12 @@ function _updateCalc(){
   if(resEl) resEl.textContent = preview ? fmtCalc(preview) : '';
 }
 
-// Mantener compatibilidad (alias hacia calcAppend)
+// Mantener compatibilidad (ya no se usan pero evitan errores)
 function calcNum(n){ calcAppend(n); }
 function calcOp(o){ calcAppend(o); }
 function calcParen(p){ calcAppend(p); }
 function calcPct(){ calcAppend('%'); }
+var _calcExpr='', _calcDisplay='0';
 
 
 
@@ -711,6 +713,7 @@ function calcPct(){ calcAppend('%'); }
 var TIPOS_EQUIPO = ['Aire acondicionado','Heladera/Freezer','Bomba de agua','Extractor','Otro'];
 var TIPOS_GAS    = ['R410A','R32','R22','R404A','R134a','Otro','N/A'];
 var _equipoEditandoId = null;
+var _equipoContextoCliente = null;
 
 function equipoTienePedidoPendiente(eqId){
   // Retorna true si hay un pedido pendiente (no facturado) vinculado al equipo
@@ -791,7 +794,7 @@ function renderEquiposList(lista){
       alerta = '<span style="background:var(--green-light);color:var(--green-text);font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px">✅ Pedido activo</span>';
     }
     var historial = (db.servicios||[]).filter(function(s){ return s.equipoId===e.id; });
-    return '<div class="scard" style="margin-bottom:8px;padding:12px">' +
+    return '<div class="scard" style="margin-bottom:8px;padding:12px;cursor:pointer" data-eid="'+e.id+'" onclick="abrirFormEquipo(this.dataset.eid)">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
       '<div style="flex:1">' +
       '<div style="font-weight:700;font-size:15px">'+(e.serie?'S/N: '+escH(e.serie)+' · ':'')+escH(e.modelo||'')+' '+escH(e.marca||'')+alerta+'</div>' +
@@ -800,10 +803,7 @@ function renderEquiposList(lista){
       (e.proximoServicio?'<div class="scard-meta">🔧 Próx. servicio: <strong>'+fmtDate(e.proximoServicio)+'</strong></div>':'')+
       (historial.length?'<div class="scard-meta" style="color:var(--text3)">📋 '+historial.length+' servicio'+(historial.length>1?'s':'')+' registrados</div>':'')+
       '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:4px">' +
-      '<button class="btn btn-xs" data-eid="'+e.id+'" onclick="abrirFormEquipo(this.dataset.eid)">Editar</button>' +
-      '<button class="btn btn-xs btn-primary" data-eid="'+e.id+'" onclick="generarPedidoDesdeEquipo(this.dataset.eid)">+ Pedido</button>' +
-      '</div>' +
+      '<button class="btn btn-xs btn-primary" data-eid="'+e.id+'" onclick="event.stopPropagation();generarPedidoDesdeEquipo(this.dataset.eid)">+ Pedido</button>' +
       '</div></div>';
   }).join('');
 }
@@ -811,6 +811,9 @@ function renderEquiposList(lista){
 function abrirFormEquipo(id){
   _equipoEditandoId = id || null;
   var e = _equipoEditandoId ? (db.equiposDB||[]).find(function(x){ return x.id===_equipoEditandoId; }) : null;
+  // Guardar el cliente de contexto para volver a su lista al guardar
+  if(e && e.cliente) _equipoContextoCliente = e.cliente;
+  else if(!id) _equipoContextoCliente = null; // nuevo equipo sin contexto
 
   // Opciones de cliente
   var clienteOpts = '<option value="">-- Seleccionar cliente --</option>';
@@ -887,7 +890,7 @@ function abrirFormEquipo(id){
 
   html += '<div class="mfoot">';
   if(e) html += '<button class="btn btn-danger btn-sm" onclick="eliminarEquipo()">Eliminar</button>';
-  html += '<button class="btn" onclick="closeModal();abrirEquipos()">Cancelar</button>';
+  html += '<button class="btn" onclick="closeModal();if(_equipoContextoCliente){abrirEquiposCliente(_equipoContextoCliente);}else{abrirEquipos();}">Cancelar</button>';
   html += '<button class="btn btn-primary" onclick="guardarEquipo()">Guardar</button>';
   html += '</div>';
   showModal(html);
@@ -956,19 +959,26 @@ function guardarEquipo(){
   }
   saveDB();
   actualizarBadgeEquipos();
+  var clienteVolver = _equipoContextoCliente || data.cliente;
   _equipoEditandoId = null;
+  _equipoContextoCliente = null;
   closeModal();
-  abrirEquipos();
+  if(clienteVolver) abrirEquiposCliente(clienteVolver);
+  else abrirEquipos();
 }
 
 function eliminarEquipo(){
   showConfirm('¿Eliminar este equipo?', function(){
+    var eq = (db.equiposDB||[]).find(function(e){ return e.id===_equipoEditandoId; });
+    var clienteVolver = _equipoContextoCliente || (eq ? eq.cliente : null);
     db.equiposDB = (db.equiposDB||[]).filter(function(e){ return e.id!==_equipoEditandoId; });
     saveDB();
     actualizarBadgeEquipos();
     _equipoEditandoId = null;
+    _equipoContextoCliente = null;
     closeModal();
-    abrirEquipos();
+    if(clienteVolver) abrirEquiposCliente(clienteVolver);
+    else abrirEquipos();
   });
 }
 
@@ -1123,7 +1133,7 @@ function renderClientesModal(){
 function renderClientesList(lista){
   if(!lista||!lista.length) return '<div class="empty">No hay clientes cargados</div>';
   return lista.map(function(c){
-    return '<div class="scard" style="margin-bottom:8px;padding:12px">' +
+    return '<div class="scard" style="margin-bottom:8px;padding:12px;cursor:pointer" data-cid="'+c.id+'" onclick="abrirFormCliente(this.dataset.cid)">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
       '<div style="flex:1">' +
       '<div style="font-weight:700;font-size:15px">'+escH(c.nombre)+'</div>' +
@@ -1133,7 +1143,7 @@ function renderClientesList(lista){
       (c.cuit?'<div class="scard-meta">CUIT: '+escH(c.cuit)+'</div>':'')+
       (c.notas?'<div class="scard-meta" style="color:var(--text3);font-style:italic">'+escH(c.notas)+'</div>':'')+
       '</div>' +
-      '<button class="btn btn-xs" data-cid="'+c.id+'" onclick="abrirFormCliente(this.dataset.cid)">Editar</button>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;color:var(--text3)"><polyline points="9 18 15 12 9 6"/></svg>' +
       '</div></div>';
   }).join('');
 }
@@ -1311,7 +1321,7 @@ function guardarClienteYVolver(){
   }, 50);
 }
 
-function actualizarSelectorEquipo(){
+function actualizarSelectorEquipo(preselect){
   var inp = document.getElementById('m-cl');
   var sel = document.getElementById('m-equipo');
   if(!inp||!sel) return;
@@ -1329,11 +1339,18 @@ function actualizarSelectorEquipo(){
     opt.textContent = parts.join(' · ');
     sel.appendChild(opt);
   });
+  // Opción para agregar equipo nuevo al final
   var optNuevo = document.createElement('option');
   optNuevo.value = '__nuevo__';
   optNuevo.textContent = '── + Agregar equipo nuevo ──';
   sel.appendChild(optNuevo);
-  sel.onchange = function(){ if(this.value==='__nuevo__'){ this.value=''; nuevoEquipoDesdeModal(); } };
+  if(preselect) sel.value = preselect;
+  sel.onchange = function(){
+    if(this.value === '__nuevo__'){
+      this.value = '';
+      nuevoEquipoDesdeModal();
+    }
+  };
 }
 
 function autocompletarCliente(id){
@@ -1349,6 +1366,116 @@ function autocompletarCliente(id){
   setTimeout(updateMapsLink, 50);
   // Actualizar equipos del cliente seleccionado
   setTimeout(actualizarSelectorEquipo, 80);
+}
+
+function nuevoEquipoDesdeModal(){
+  // Guardar estado actual del pedido
+  var ep = {
+    id:   window._editingServiceId || null,
+    cliente: (document.getElementById('m-cl')||{}).value||'',
+    tel:     (document.getElementById('m-tel')||{}).value||'',
+    dir:     (document.getElementById('m-dir')||{}).value||'',
+    zona:    (document.getElementById('m-zona')||{}).value||'',
+    tipo:    (document.getElementById('m-tipo')||{}).value||'',
+    estado:  (document.getElementById('m-est')||{}).value||'',
+    fecha:   (document.getElementById('m-fecha')||{}).value||'',
+    hora:    (document.getElementById('m-hora')||{}).value||'',
+    desc:    (document.getElementById('m-desc')||{}).value||'',
+    tecnicos: [...document.querySelectorAll('#chips-tec .chip.sel')].map(function(c){ return c.dataset.tid; }),
+    items:   JSON.parse(JSON.stringify(modalItems||[])),
+  };
+  window._estadoPedidoGuardado = ep;
+  var clienteNombre = ep.cliente;
+  window._nuevoEquipoCliente = clienteNombre;
+
+  var TIPOS_EQUIPO = ['Split','Cassette','Conducto','Ventana','Portátil','Central','Bomba de calor','Otro'];
+  var GASES = ['R410A','R32','R22','R134a','R407C','Otro'];
+  var tOpts = TIPOS_EQUIPO.map(function(t){ return '<option>'+t+'</option>'; }).join('');
+  var gOpts = GASES.map(function(g){ return '<option>'+g+'</option>'; }).join('');
+
+  var html = '<div class="mtitle">🔧 Nuevo equipo</div>';
+  if(clienteNombre) html += '<div style="font-size:13px;color:var(--text2);margin-bottom:12px">Cliente: <strong>'+escH(clienteNombre)+'</strong></div>';
+  html += '<div class="frow"><div class="field"><label>Tipo *</label><select id="eq-tipo">'+tOpts+'</select></div>';
+  html += '<div class="field"><label>Ubicación</label><input id="eq-ubic" placeholder="Ej: Living, Cocina"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Marca</label><input id="eq-marca" placeholder="Ej: Carrier"></div>';
+  html += '<div class="field"><label>Modelo</label><input id="eq-modelo" placeholder="Ej: 42KCC012DS"></div></div>';
+  html += '<div class="frow"><div class="field"><label>N° de serie</label><input id="eq-serie" placeholder="Número de serie"></div>';
+  html += '<div class="field"><label>Capacidad</label><input id="eq-cap" placeholder="Ej: 3000 frigorías"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Tipo de gas</label><select id="eq-gas">'+gOpts+'</select></div>';
+  html += '<div class="field"><label>Fecha instalación</label><input type="date" id="eq-inst"></div></div>';
+  html += '<div class="frow"><div class="field"><label>Frec. mantenimiento (meses)</label><input type="number" id="eq-freq" value="6" min="1"></div>';
+  html += '<div class="field"><label>Próximo servicio</label><input type="date" id="eq-prox"></div></div>';
+  html += '<div class="mfoot"><button class="btn" onclick="cancelarNuevoEquipo()">Cancelar</button>';
+  html += '<button class="btn btn-primary" onclick="guardarNuevoEquipoDesdeModal()">Guardar equipo</button></div>';
+  showModal(html);
+}
+
+function cancelarNuevoEquipo(){
+  closeModal();
+  var ep = window._estadoPedidoGuardado;
+  if(ep) setTimeout(function(){ restaurarPedido(ep); }, 50);
+}
+
+function guardarNuevoEquipoDesdeModal(){
+  var clienteNombre = window._nuevoEquipoCliente || '';
+  var freq = parseInt((document.getElementById('eq-freq')||{}).value||6);
+  var prox = (document.getElementById('eq-prox')||{}).value || '';
+  if(!prox){ var d=new Date(); d.setMonth(d.getMonth()+freq); prox=d.toISOString().split('T')[0]; }
+  var data = {
+    id: 'eq_'+Date.now(),
+    cliente: clienteNombre,
+    tipo:       (document.getElementById('eq-tipo')||{}).value||'Split',
+    marca:      ((document.getElementById('eq-marca')||{}).value||'').trim(),
+    modelo:     ((document.getElementById('eq-modelo')||{}).value||'').trim(),
+    serie:      ((document.getElementById('eq-serie')||{}).value||'').trim(),
+    capacidad:  ((document.getElementById('eq-cap')||{}).value||'').trim(),
+    gas:        (document.getElementById('eq-gas')||{}).value||'R410A',
+    ubicacion:  ((document.getElementById('eq-ubic')||{}).value||'').trim(),
+    fechaInstalacion: (document.getElementById('eq-inst')||{}).value||'',
+    frecuenciaMeses: freq,
+    proximoServicio: prox,
+    notas: '', historial: []
+  };
+  if(!db.equiposDB) db.equiposDB = [];
+  db.equiposDB.push(data);
+  saveDB();
+  window._nuevoEquipoRecienCreado = data.id;
+  closeModal();
+  var ep = window._estadoPedidoGuardado;
+  if(ep) setTimeout(function(){ restaurarPedido(ep); }, 50);
+}
+
+function restaurarPedido(ep){
+  openServiceModal(ep.id || null);
+  setTimeout(function(){
+    var set = function(id,val){ var el=document.getElementById(id); if(el&&val!==undefined) el.value=val; };
+    set('m-cl',   ep.cliente);
+    set('m-tel',  ep.tel);
+    set('m-dir',  ep.dir);
+    set('m-zona', ep.zona);
+    set('m-tipo', ep.tipo);
+    set('m-est',  ep.estado);
+    set('m-fecha',ep.fecha);
+    set('m-hora', ep.hora);
+    set('m-desc', ep.desc);
+    if(ep.tecnicos && ep.tecnicos.length){
+      document.querySelectorAll('#chips-tec .chip').forEach(function(c){
+        c.classList.toggle('sel', ep.tecnicos.indexOf(c.dataset.tid)>=0);
+      });
+    }
+    if(ep.items && ep.items.length){ modalItems=ep.items; renderItemsList(); }
+    actualizarSelectorEquipo();
+    setTimeout(function(){
+      var sel = document.getElementById('m-equipo');
+      if(sel && window._nuevoEquipoRecienCreado){
+        sel.value = window._nuevoEquipoRecienCreado;
+        window._nuevoEquipoRecienCreado = null;
+      }
+      updateMapsLink();
+      updateResumen();
+    }, 150);
+    window._estadoPedidoGuardado = null;
+  }, 200);
 }
 
 function setupAC(inputId, listId, srcFn){
@@ -1392,9 +1519,9 @@ function mapsUrl(dir, zona){
 function mapsIcon(dir, zona){
   if(!dir) return '';
   return '<a href="'+mapsUrl(dir,zona)+'" target="_blank" title="Abrir en Maps" '+
-    'style="display:inline-flex;align-items:center;margin-left:6px;color:var(--blue);text-decoration:none;flex-shrink:0" '+
+    'style="display:inline-flex;align-items:center;margin-left:6px;color:#f97316;text-decoration:none;flex-shrink:0" '+
     'onclick="event.stopPropagation()">'+
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px">'+
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px">'+
     '<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a>';
 }
 
@@ -1563,7 +1690,6 @@ function generarPDF(id){
   const botonesHtml = `
   <div style="font-family:Arial,sans-serif;display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#f1f5f9;border-bottom:2px solid #1a3a6b;align-items:center">
     <span style="font-size:12px;color:#475569;font-weight:600;flex:1">Presupuesto ${nro} · ${s.cliente}</span>
-    <span style="font-size:11px;color:#64748b;display:flex;align-items:center">💡 En Chrome: activá <strong style='margin:0 3px'>"Gráficos de fondo"</strong> para ver los colores</span>
     <button onclick="window.print()" style="padding:8px 16px;background:#1a3a6b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">🖨️ Imprimir / Guardar PDF</button>
   </div>`;
 
@@ -1689,7 +1815,7 @@ function viewPendiente(id){
         '<input type="number" value="'+(item.qty||1)+'" '+dis+'>' +
         '<input value="'+escH(item.desc||'')+'" '+dis+'>' +
         '<input type="number" value="'+(item.importe||'')+'" '+dis+'>' +
-        '<button class="tbtn '+cls+'" '+dis+' data-tipo="'+(item.tipo||'ingreso')+'" style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
+        '<button class="tbtn '+cls+'" '+dis+' style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
         '</div>';
     }).join('');
   }
@@ -1699,25 +1825,17 @@ function viewPendiente(id){
   const totC=ing+cos, base=ing-gas;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
-  // Total destacado
-  html +=
-    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
-      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
-      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
-    '</div>';
-  // Desglose interno
   html += '<div class="resumen" style="margin-top:10px">' +
-    '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-    '<div class="rrow tot" style="border-top:none;margin-top:4px;padding-top:4px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (tecs.length ?
-      '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
-        '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Reparto por técnico</div>' +
-        tecs.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
-          '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'; }).join('') +
-      '</div>' : '') +
+    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+    (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
+      '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
+      tecs.map(t=>'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
+        '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'
+      ).join('') + '</div>' : '') +
     '</div>';
 
   html += '<div class="mfoot">' +
@@ -1726,38 +1844,96 @@ function viewPendiente(id){
     '</div>';
   showModal(html);
 }
+var _factDesde = '2000-01-01';
+var _factHasta = todayStr();
+
 function renderFacturados(){
   const all = getVisible().filter(s=>s.facturado).sort((a,b)=>b.id-a.id);
   const el = document.getElementById('page-realizados');
-  el.innerHTML = '<div class="page-header"><div class="page-title">Facturados <span style="font-size:14px;font-weight:400;color:var(--text3)">'+all.length+'</span></div></div>' +
-    '<div class="fbar"><input type="text" id="fr-q" placeholder="Buscar cliente..." onkeyup="renderFactList()" style="min-width:130px">' +
-    '<input type="month" id="fr-mes" onchange="renderFactList()"></div>' +
+  el.innerHTML = '<div class="page-header"><div class="page-title">Facturados <span style="font-size:14px;font-weight:400;color:var(--text3)" id="fact-count">'+all.length+'</span></div></div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px">' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">' +
+        '<input type="text" id="fr-q" placeholder="Buscar cliente..." onkeyup="renderFactList()" style="flex:1;min-width:130px;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px">' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<label style="font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap">Desde</label>' +
+          '<input type="date" id="fact-desde" value="'+_factDesde+'" onchange="setFactFechas()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px">' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<label style="font-size:13px;font-weight:600;color:var(--text2);white-space:nowrap">Hasta</label>' +
+          '<input type="date" id="fact-hasta" value="'+_factHasta+'" onchange="setFactFechas()" style="padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:13px">' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap" id="fact-rangos"></div>' +
+    '</div>' +
     '<div id="real-list"></div>';
+  renderFactRangos();
   renderFactList();
 }
+
+function renderFactRangos(){
+  const hoy = new Date();
+  const hoyStr = todayStr();
+  const lunes = new Date(hoy); lunes.setDate(hoy.getDate()-((hoy.getDay()+6)%7));
+  const priMes = new Date(hoy.getFullYear(),hoy.getMonth(),1).toISOString().split('T')[0];
+  const priAnio = hoy.getFullYear()+'-01-01';
+  const rangos = [
+    {label:'Hoy',    desde:hoyStr,    hasta:hoyStr},
+    {label:'Esta semana', desde:lunes.toISOString().split('T')[0], hasta:hoyStr},
+    {label:'Este mes',    desde:priMes,    hasta:hoyStr},
+    {label:'Este año',    desde:priAnio,   hasta:hoyStr},
+    {label:'Todo',        desde:'2000-01-01', hasta:hoyStr},
+  ];
+  const el = document.getElementById('fact-rangos');
+  if(!el) return;
+  el.innerHTML = rangos.map(r=>{
+    const active = _factDesde===r.desde && _factHasta===r.hasta;
+    return '<button onclick="setFactRango(\''+r.desde+'\',\''+r.hasta+'\')" style="padding:5px 12px;border-radius:20px;border:1.5px solid var(--border2);background:'+(active?'var(--blue)':'var(--surface2)')+';color:'+(active?'#fff':'var(--text2)')+';font-size:12px;font-weight:600;cursor:pointer">'+r.label+'</button>';
+  }).join('');
+}
+
+function setFactFechas(){
+  _factDesde = (document.getElementById('fact-desde')||{}).value || '2000-01-01';
+  _factHasta = (document.getElementById('fact-hasta')||{}).value || todayStr();
+  renderFactRangos();
+  renderFactList();
+}
+
+function setFactRango(desde, hasta){
+  _factDesde = desde; _factHasta = hasta;
+  var d = document.getElementById('fact-desde');
+  var h = document.getElementById('fact-hasta');
+  if(d) d.value = desde;
+  if(h) h.value = hasta;
+  renderFactRangos();
+  renderFactList();
+}
+
 function renderFactList(){
-  const q   = (document.getElementById('fr-q')||{}).value || '';
-  const mes = (document.getElementById('fr-mes')||{}).value || '';
+  const q = (document.getElementById('fr-q')||{}).value || '';
   let svcs = getVisible().filter(s=>s.facturado).sort((a,b)=>b.id-a.id);
-  if(q)   svcs = svcs.filter(s=>s.cliente.toLowerCase().includes(q.toLowerCase()));
-  if(mes) svcs = svcs.filter(s=>s.fecha && s.fecha.startsWith(mes));
+  if(q) svcs = svcs.filter(s=>s.cliente.toLowerCase().includes(q.toLowerCase()));
+  if(_factDesde) svcs = svcs.filter(s=>s.fecha && s.fecha >= _factDesde);
+  if(_factHasta) svcs = svcs.filter(s=>s.fecha && s.fecha <= _factHasta);
+  const cnt = document.getElementById('fact-count');
+  if(cnt) cnt.textContent = svcs.length;
   const el = document.getElementById('real-list');
   if(!el) return;
-  if(!svcs.length){ el.innerHTML='<div class="empty">No hay servicios facturados</div>'; return; }
+  if(!svcs.length){ el.innerHTML='<div class="empty">No hay servicios en este período</div>'; return; }
   el.innerHTML = svcs.map(s=>{
     const f = calcFin(s);
     const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
-    const eq = s.equipoId ? (db.equiposDB||[]).find(function(e){ return e.id===s.equipoId; }) : null;
-    const eqLabel = eq ? escH([eq.tipo,eq.marca,eq.modelo].filter(Boolean).join(' '))+(eq.ubicacion?' · '+escH(eq.ubicacion):'') : '';
     return '<div class="scard" onclick="viewService('+s.id+')" style="cursor:pointer">' +
       '<div class="scard-head"><div><div class="scard-name">'+escH(s.cliente)+'</div>' +
-      '<div class="scard-meta">'+escH(s.tipo)+(s.zona?' · '+escH(s.zona):'')+' · '+fmtDate(s.fecha)+'</div></div>' +
+      '<div class="scard-meta">'+escH(s.tipo)+' · '+fmtDate(s.fecha)+'</div>' +
+      '<div class="scard-meta" style="display:flex;align-items:center;gap:2px">📍 '+escH(s.direccion||'')+(s.zona?' · '+escH(s.zona):'')+mapsIcon(s.direccion,s.zona)+'</div></div>' +
       '<span class="badge bb">Facturado</span></div>' +
-      '<div class="scard-meta" style="display:flex;align-items:center;gap:2px">📍 '+escH(s.direccion||'')+(s.zona?' · '+escH(s.zona):'')+mapsIcon(s.direccion,s.zona)+'</div>' +
-      (s.fecha?'<div class="scard-meta">📅 '+fmtDate(s.fecha)+(s.hora?' ⏰ '+s.hora:'')+'</div>':'')+
-      (tecs.length?'<div class="scard-meta">👷 '+tecs.map(function(t){ return t.nombre; }).join(', ')+'</div>':'')+
-      (eqLabel?'<div class="scard-meta">🔧 '+eqLabel+'</div>':'')+
-      '<div style="font-size:13px;color:var(--text2);margin-top:4px">Total: <strong style="color:var(--text)">$ '+fmt(f.totalCliente)+'</strong></div>' +
+      (tecs.length?'<div class="scard-meta">👷 '+tecs.map(t=>t.nombre).join(', ')+'</div>':'')+
+      '<div style="font-size:13px;color:var(--text2);margin-top:6px">' +
+      '<span style="color:var(--green-text)">Ing: <b>$ '+fmt(f.ingresos)+'</b></span> &nbsp;' +
+      '<span style="color:var(--blue-text)">Costo: <b>$ '+fmt(f.costos)+'</b></span> &nbsp;' +
+      '<span style="color:var(--red-text)">Gasto: <b>$ '+fmt(f.gastos)+'</b></span></div>' +
+      '<div style="font-size:16px;font-weight:700;color:#fbbf24;margin-top:4px">Total cliente: $ '+fmt(f.totalCliente)+'</div>' +
+      (tecs.length?'<div style="font-size:12px;color:var(--green-text);margin-top:2px">'+tecs.map(t=>t.nombre+': $ '+fmt(f.rMap[t.id]||0)).join(' · ')+'</div>':'')+
       '<div class="scard-foot"><div class="arow">' +
       '<button class="btn btn-sm" onclick="event.stopPropagation();generarPDF('+s.id+')" title="Generar PDF">📄 PDF</button>' +
       '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();desFacturar('+s.id+')">Borrar</button>' +
@@ -1808,21 +1984,6 @@ function viewService(id){
   });
   html += '</div></div>';
 
-  // Equipo vinculado
-  if(s.equipoId){
-    const eq = (db.equiposDB||[]).find(function(e){ return e.id===s.equipoId; });
-    if(eq){
-      html += '<div class="field"><label>Equipo intervenido</label>';
-      html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text)">';
-      html += '<div style="font-weight:600;margin-bottom:4px">🔧 '+escH([eq.tipo,eq.marca,eq.modelo].filter(Boolean).join(' '))+'</div>';
-      if(eq.serie)    html += '<div style="color:var(--text2)">N° serie: <span style="color:var(--text)">'+escH(eq.serie)+'</span></div>';
-      if(eq.ubicacion)html += '<div style="color:var(--text2)">Ubicación: <span style="color:var(--text)">'+escH(eq.ubicacion)+'</span></div>';
-      if(eq.capacidad)html += '<div style="color:var(--text2)">Capacidad: <span style="color:var(--text)">'+escH(eq.capacidad)+'</span></div>';
-      if(eq.gas)      html += '<div style="color:var(--text2)">Gas: <span style="color:var(--text)">'+escH(eq.gas)+'</span></div>';
-      html += '</div></div>';
-    }
-  }
-
   html += '<hr style="border:none;border-top:1px solid var(--border);margin:14px 0">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
   html += '<div style="font-size:13px;font-weight:600;color:var(--text2)">Ítems del servicio</div>';
@@ -1838,7 +1999,7 @@ function viewService(id){
         '<input type="number" value="'+(item.qty||1)+'" '+dis+'>' +
         '<input value="'+escH(item.desc||'')+'" '+dis+'>' +
         '<input type="number" value="'+(item.importe||'')+'" '+dis+'>' +
-        '<button class="tbtn '+cls+'" '+dis+' data-tipo="'+(item.tipo||'ingreso')+'" style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
+        '<button class="tbtn '+cls+'" '+dis+' style="opacity:1">'+ucFirst(item.tipo||'ingreso')+'</button>' +
         '</div>';
     }).join('');
   }
@@ -1849,25 +2010,17 @@ function viewService(id){
   const totC=ing+cos, base=ing-gas;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
-  // Total destacado
-  html +=
-    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
-      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
-      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
-    '</div>';
-  // Desglose interno
   html += '<div class="resumen" style="margin-top:10px">' +
-    '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-    '<div class="rrow tot" style="border-top:none;margin-top:4px;padding-top:4px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (tecs.length ?
-      '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
-        '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Reparto por técnico</div>' +
-        tecs.map(function(t){ return '<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
-          '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'; }).join('') +
-      '</div>' : '') +
+    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+    (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
+      '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
+      tecs.map(t=>'<div style="display:flex;align-items:center;gap:8px;margin-top:6px"><span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+escH(t.nombre)+'</span>' +
+        '<input type="number" value="'+(f.rMap[t.id]||0)+'" '+dis+' style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none;opacity:.7;cursor:default"></div>'
+      ).join('') + '</div>' : '') +
     '</div>';
 
   html += '<div class="mfoot"><button class="btn btn-primary" onclick="closeModal()">Cerrar</button></div>';
@@ -1940,38 +2093,33 @@ function showDayDetail(d){
   const ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   const svcs = getVisible().filter(s=>s.fecha===ds && !s.facturado);
   const el = document.getElementById('cal-day-detail');
-  // Header con fecha y botón nuevo pedido
-  var header = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<div style="font-size:14px;font-weight:700;color:var(--text)">'+fmtDate(ds)+'</div>' +
-    '<button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeAgenda(\''+ds+'\')">+ Nuevo pedido</button>' +
-    '</div>';
+  let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div style="font-size:13px;font-weight:600;color:var(--text2)">'+fmtDate(ds)+'</div>' +
+    '<button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeCalendario(\''+ds+'\')">+ Nuevo pedido</button>' +
+  '</div>';
   if(!svcs.length){
-    el.innerHTML = header + '<div class="scard" style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Sin servicios este día</div>';
-    return;
-  }
-  el.innerHTML = header + svcs.map(s=>{
-    const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id)).map(t=>t.nombre).join(', ');
-    const bc = s.estado==='En proceso' ? 'bpr' : 'bp';
-    return '<div class="scard" style="margin-bottom:8px;cursor:pointer" onclick="openServiceModal('+s.id+')">' +
-      '<div class="scard-head"><div>' +
+    html += '<div class="empty" style="padding:12px 0">Sin servicios pendientes este día</div>';
+  } else {
+    html += svcs.map(s=>{
+      const tecs=db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id)).map(t=>t.nombre).join(', ');
+      return '<div class="scard" style="margin-bottom:8px;cursor:pointer" onclick="openServiceModal('+s.id+')">' +
         '<div class="scard-name">'+escH(s.cliente)+'</div>' +
-        '<div class="scard-meta">'+escH(s.tipo)+(s.zona?' · '+escH(s.zona):'')+'</div>' +
-      '</div><span class="badge '+bc+'">'+(s.estado||'Pendiente')+'</span></div>' +
-      (s.hora?'<div class="scard-meta">⏰ '+s.hora+'</div>':'')+
-      (tecs?'<div class="scard-meta">👷 '+tecs+'</div>':'')+
+        '<div class="scard-meta">'+escH(s.tipo)+(s.hora?' · ⏰ '+s.hora:'')+'</div>' +
+        (tecs?'<div class="scard-meta">👷 '+tecs+'</div>':'')+
       '</div>';
-  }).join('');
+    }).join('');
+  }
+  el.innerHTML = html;
 }
 
-var _fechaAgenda = null;
-function nuevoPedidoDesdeAgenda(fecha){
-  _fechaAgenda = fecha;
+function nuevoPedidoDesdeCalendario(fecha){
   openServiceModal(null);
-  _fechaAgenda = null;
   setTimeout(function(){
-    var el = document.getElementById('m-fecha');
-    if(el) el.value = fecha;
-    verificarConflictoHora();
+    var fEl = document.getElementById('m-fecha');
+    var hEl = document.getElementById('m-hora');
+    if(fEl) fEl.value = fecha;
+    if(hEl && !hEl.value) hEl.value = '09:00';
+    updateResumen();
   }, 100);
 }
 
@@ -2095,7 +2243,107 @@ function renderEstadisticas(){
     '<div class="sc"><div class="slabel">Base a repartir</div><div class="sval" style="color:var(--green)">$ '+fmt(T.base)+'</div></div>' +
     '<div class="sc"><div class="slabel">Trabajos facturados</div><div class="sval">'+svcsFiltrados.length+'</div></div>' +
     '<div class="sc"><div class="slabel">Promedio por trabajo</div><div class="sval">$ '+fmt(avg)+'</div></div>' +
-    '</div>' + tecHtml;
+    '</div>' + tecHtml +
+    // Sección gráficos
+    '<div style="margin-top:20px">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;letter-spacing:.3px">📊 Gráficos</div>' +
+      // Fila 1: Facturación por técnico + Cantidad de servicios
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Facturación mensual por técnico</div><div style="position:relative;height:220px"><canvas id="chart-tec"></canvas></div></div>' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Cantidad de servicios por mes</div><div style="position:relative;height:220px"><canvas id="chart-svcs"></canvas></div></div>' +
+      '</div>' +
+      // Fila 2: Ingresos vs costos vs gastos
+      '<div style="margin-bottom:12px">' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Ingresos vs Costos vs Gastos mensual</div><div style="position:relative;height:200px"><canvas id="chart-fin"></canvas></div></div>' +
+      '</div>' +
+      // Fila 3: Torta tipo + Zonas + Ticket promedio
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Distribución por tipo</div><div style="position:relative;height:220px"><canvas id="chart-tipo"></canvas></div></div>' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Servicios por zona</div><div style="position:relative;height:220px"><canvas id="chart-zona"></canvas></div></div>' +
+        '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Ticket promedio por tipo</div><div style="position:relative;height:220px"><canvas id="chart-ticket"></canvas></div></div>' +
+      '</div>' +
+    '</div>';
+
+  // Renderizar todos los gráficos después de que el DOM esté listo
+  setTimeout(function(){ renderCharts(svcsFiltrados, svcsAll); }, 50);
+}
+
+var _charts = {};
+
+function renderCharts(svcs, svcsAll){
+  // Destruir charts previos
+  Object.values(_charts).forEach(function(c){ if(c) c.destroy(); });
+  _charts = {};
+
+  const PALETA = ['#3b82f6','#22c55e','#f97316','#a855f7','#ef4444','#eab308','#06b6d4','#ec4899'];
+  const gridColor = 'rgba(255,255,255,0.08)';
+  const tickColor = 'rgba(255,255,255,0.5)';
+  const defOpts = {
+    responsive:true, maintainAspectRatio:false, resizeDelay:200,
+    plugins:{ legend:{ labels:{ color:'rgba(255,255,255,0.7)', font:{size:11} } } },
+    scales:{
+      x:{ ticks:{color:tickColor,font:{size:10}}, grid:{color:gridColor} },
+      y:{ ticks:{color:tickColor,font:{size:10}, callback:function(v){ return '$'+fmt(v); }}, grid:{color:gridColor} }
+    }
+  };
+
+  // ── Calcular meses en el rango ──────────────────────────────────────
+  function getMeses(lista){
+    const set = new Set();
+    lista.forEach(function(s){ if(s.fecha) set.add(s.fecha.substring(0,7)); });
+    return [...set].sort();
+  }
+  const meses = getMeses(svcs);
+  const mesLabels = meses.map(function(m){
+    const p = m.split('-'); return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][Number(p[1])-1]+' '+p[0].substring(2);
+  });
+
+  // ── 1. Facturación mensual por técnico ─────────────────────────────
+  const tecs = isAdmin() ? db.tecnicos : db.tecnicos.filter(function(t){ return t.id===currentUser; });
+  const datasets1 = tecs.map(function(t, i){
+    const data = meses.map(function(m){
+      return svcs.filter(function(s){ return s.fecha && s.fecha.startsWith(m) && s.tecnicos && s.tecnicos.includes(t.id); })
+        .reduce(function(acc,s){ return acc + (calcFin(s).rMap[t.id]||0); }, 0);
+    });
+    return { label: t.nombre, data: data, backgroundColor: PALETA[i % PALETA.length]+'cc', borderColor: PALETA[i % PALETA.length], borderWidth:1.5 };
+  });
+  var ctx1 = document.getElementById('chart-tec');
+  if(ctx1) _charts.tec = new Chart(ctx1, { type:'bar', data:{ labels:mesLabels, datasets:datasets1 }, options: Object.assign({},defOpts,{ plugins: Object.assign({},defOpts.plugins,{ legend:{ labels:{ color:'rgba(255,255,255,0.7)',font:{size:11} } } }), scales: Object.assign({},defOpts.scales,{ x: Object.assign({},defOpts.scales.x,{stacked:false}), y: Object.assign({},defOpts.scales.y,{stacked:false}) }) }) });
+
+  // ── 2. Cantidad de servicios por mes ───────────────────────────────
+  const dataSvcs = meses.map(function(m){ return svcs.filter(function(s){ return s.fecha && s.fecha.startsWith(m); }).length; });
+  var ctx2 = document.getElementById('chart-svcs');
+  if(ctx2) _charts.svcs = new Chart(ctx2, { type:'bar', data:{ labels:mesLabels, datasets:[{ label:'Servicios', data:dataSvcs, backgroundColor:'#3b82f6aa', borderColor:'#3b82f6', borderWidth:1.5, borderRadius:4 }] }, options: Object.assign({},defOpts,{ plugins:{ legend:{display:false} }, scales:{ x: Object.assign({},defOpts.scales.x), y: Object.assign({},defOpts.scales.y,{ ticks: Object.assign({},defOpts.scales.y.ticks,{ callback:function(v){ return v; } }) }) } }) });
+
+  // ── 3. Ingresos vs Costos vs Gastos mensual ────────────────────────
+  const dataIng  = meses.map(function(m){ return svcs.filter(function(s){ return s.fecha&&s.fecha.startsWith(m); }).reduce(function(a,s){ return a+calcFin(s).ingresos; },0); });
+  const dataCos  = meses.map(function(m){ return svcs.filter(function(s){ return s.fecha&&s.fecha.startsWith(m); }).reduce(function(a,s){ return a+calcFin(s).costos; },0); });
+  const dataGas  = meses.map(function(m){ return svcs.filter(function(s){ return s.fecha&&s.fecha.startsWith(m); }).reduce(function(a,s){ return a+calcFin(s).gastos; },0); });
+  var ctx3 = document.getElementById('chart-fin');
+  if(ctx3) _charts.fin = new Chart(ctx3, { type:'line', data:{ labels:mesLabels, datasets:[
+    { label:'Ingresos', data:dataIng, borderColor:'#22c55e', backgroundColor:'#22c55e22', tension:.3, fill:true, pointRadius:3 },
+    { label:'Costos',   data:dataCos, borderColor:'#3b82f6', backgroundColor:'#3b82f622', tension:.3, fill:true, pointRadius:3 },
+    { label:'Gastos',   data:dataGas, borderColor:'#ef4444', backgroundColor:'#ef444422', tension:.3, fill:true, pointRadius:3 },
+  ]}, options: defOpts });
+
+  // ── 4. Distribución por tipo ───────────────────────────────────────
+  const tipos = {}; svcs.forEach(function(s){ tipos[s.tipo||'Otro']=(tipos[s.tipo||'Otro']||0)+1; });
+  var ctx4 = document.getElementById('chart-tipo');
+  if(ctx4) _charts.tipo = new Chart(ctx4, { type:'doughnut', data:{ labels:Object.keys(tipos), datasets:[{ data:Object.values(tipos), backgroundColor:PALETA.slice(0,Object.keys(tipos).length).map(function(c){ return c+'cc'; }), borderColor:PALETA.slice(0,Object.keys(tipos).length), borderWidth:1.5 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'rgba(255,255,255,0.7)', font:{size:10}, padding:8 } } } } });
+
+  // ── 5. Servicios por zona ──────────────────────────────────────────
+  const zonas = {}; svcs.forEach(function(s){ if(s.zona) zonas[s.zona]=(zonas[s.zona]||0)+1; });
+  const zonasSort = Object.entries(zonas).sort(function(a,b){ return b[1]-a[1]; }).slice(0,8);
+  var ctx5 = document.getElementById('chart-zona');
+  if(ctx5) _charts.zona = new Chart(ctx5, { type:'bar', data:{ labels:zonasSort.map(function(z){ return z[0]; }), datasets:[{ label:'Servicios', data:zonasSort.map(function(z){ return z[1]; }), backgroundColor: PALETA.slice(0,zonasSort.length).map(function(c){ return c+'cc'; }), borderColor: PALETA.slice(0,zonasSort.length), borderWidth:1.5, borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y', plugins:{ legend:{display:false} }, scales:{ x:{ ticks:{color:tickColor,font:{size:10}}, grid:{color:gridColor} }, y:{ ticks:{color:tickColor,font:{size:10}}, grid:{color:gridColor} } } } });
+
+  // ── 6. Ticket promedio por tipo ────────────────────────────────────
+  const ticketTipos = {}; const ticketCount = {};
+  svcs.forEach(function(s){ const t=s.tipo||'Otro'; ticketTipos[t]=(ticketTipos[t]||0)+calcFin(s).totalCliente; ticketCount[t]=(ticketCount[t]||0)+1; });
+  const tkLabels = Object.keys(ticketTipos);
+  const tkData   = tkLabels.map(function(t){ return ticketCount[t]?Math.round(ticketTipos[t]/ticketCount[t]):0; });
+  var ctx6 = document.getElementById('chart-ticket');
+  if(ctx6) _charts.ticket = new Chart(ctx6, { type:'bar', data:{ labels:tkLabels, datasets:[{ label:'Promedio $', data:tkData, backgroundColor:PALETA.slice(0,tkLabels.length).map(function(c){ return c+'cc'; }), borderColor:PALETA.slice(0,tkLabels.length), borderWidth:1.5, borderRadius:4 }] }, options: Object.assign({},defOpts,{ plugins:{ legend:{display:false} } }) });
 }
 
 
@@ -2184,9 +2432,9 @@ function renderTecnicos(){
     db.tecnicos.map(t=>{
       const svcs = db.servicios.filter(s=>s.facturado && s.tecnicos && s.tecnicos.includes(t.id));
       const tot  = svcs.reduce((a,s)=>a+(calcFin(s).rMap[t.id]||0), 0);
-      return '<tr><td style="font-weight:500">'+t.nombre+'</td><td>'+svcs.length+'</td>' +
+      return '<tr style="cursor:pointer" onclick="openTecModal(\''+t.id+'\')"><td style="font-weight:500">'+t.nombre+'</td><td>'+svcs.length+'</td>' +
         '<td style="color:var(--green);font-weight:600">$ '+fmt(tot)+'</td>' +
-        '<td><button class="btn btn-xs" onclick="openTecModal(\''+t.id+'\')">Editar</button>' + '<button class="btn btn-xs btn-danger" data-tid="'+t.id+'" onclick="eliminarTecnico(this.dataset.tid)">Borrar</button></td></tr>';
+        '<td><button class="btn btn-xs" onclick="openTecModal(\''+t.id+'\')">Editar</button>' + '<button class="btn btn-xs btn-danger" data-tid="'+t.id+'" onclick="event.stopPropagation();eliminarTecnico(this.dataset.tid)">Borrar</button></td></tr>';
     }).join('') +
     '</tbody></table></div>';
 }
@@ -2234,7 +2482,7 @@ function desFacturar(id){
     const s=db.servicios.find(x=>Number(x.id)===id);
     if(!s) return;
     s.facturado=false; s.estado='Pendiente';
-    saveDB(); closeModal(); showPage('pendientes', document.getElementById('nav-pendientes'));
+    saveDB(); renderFacturados();
   });
 }
 
@@ -2246,9 +2494,8 @@ function openServiceModal(id){
   modalItems = s && s.items ? JSON.parse(JSON.stringify(s.items)) : [{qty:1,desc:'',importe:'',tipo:'ingreso'}];
   repartoEditado = {}; // limpiar estado de reparto al abrir modal
   const defFecha = s ? (s.fecha||todayStr()) : todayStr();
-  const horaDefault = (s && s.hora) ? s.hora : (_fechaAgenda ? '09:00' : '');
   const horaOpts = '<option value="">-- Hora --</option>' +
-    HORAS.map(h=>'<option'+(horaDefault===h?' selected':'')+'>'+h+'</option>').join('');
+    HORAS.map(h=>'<option'+(s&&s.hora===h?' selected':'')+'>'+h+'</option>').join('');
 
   let html = '<div class="mtitle">'+(s?'Editar pedido':'Nuevo pedido')+'</div>';
   html += '<div class="frow">';
@@ -2256,7 +2503,7 @@ function openServiceModal(id){
   html += '<div class="field"><label>Teléfono</label><input id="m-tel" value="'+(s?escH(s.telefono||''):'')+'" placeholder="Opcional" type="tel"></div>';
   html += '</div>';
   html += '<div class="frow">';
-  html += '<div class="field"><label>Dirección *</label><div style="display:flex;align-items:center;gap:6px"><input id="m-dir" value="'+(s?escH(s.direccion||''):'')+'" placeholder="Calle y número" style="flex:1" oninput="updateMapsLink()"><a id="maps-link" href="#" target="_blank" title="Abrir en Maps" style="display:inline-flex;align-items:center;color:var(--blue);text-decoration:none;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div></div>';
+  html += '<div class="field"><label>Dirección *</label><div style="display:flex;align-items:center;gap:6px"><input id="m-dir" value="'+(s?escH(s.direccion||''):'')+'" placeholder="Calle y número" style="flex:1" oninput="updateMapsLink()"><a id="maps-link" href="#" target="_blank" title="Abrir en Maps" style="display:inline-flex;align-items:center;color:#f97316;text-decoration:none;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></a></div></div>';
   html += '<div class="field"><label>Zona</label><div class="acw"><input id="m-zona" value="'+(s?escH(s.zona||''):'')+'" placeholder="Ej: Olivos" autocomplete="off"><div id="m-zona-list" class="acl" style="display:none"></div></div></div>';
   html += '</div>';
   html += '<div class="frow">';
@@ -2264,13 +2511,12 @@ function openServiceModal(id){
   html += '<div class="field"><label>Estado</label><select id="m-est">'+ESTADOS.map(e=>'<option'+(s&&s.estado===e?' selected':'')+'>'+e+'</option>').join('')+'</select></div>';
   html += '</div>';
   html += '<div class="frow">';
-  html += '<div class="field"><label>Fecha de visita</label><input type="date" id="m-fecha" value="'+defFecha+'" onchange="verificarConflictoHora()"></div>';
-  html += '<div class="field"><label>Hora</label><select id="m-hora" onchange="verificarConflictoHora()">'+horaOpts+'</select></div>';
-  html += '<div id="hora-conflict-warn" class="alert aw" style="display:none;margin-top:-8px;margin-bottom:4px"></div>';
+  html += '<div class="field"><label>Fecha de visita</label><input type="date" id="m-fecha" value="'+defFecha+'"></div>';
+  html += '<div class="field"><label>Hora</label><select id="m-hora">'+horaOpts+'</select></div>';
   html += '</div>';
   // Selector de equipo (filtrado por cliente)
   html += '<div class="field"><label>Equipo vinculado <span style="font-weight:400;color:var(--text3)">(opcional)</span></label>';
-  html += '<select id="m-equipo" onchange="if(this.value===\'__nuevo__\'){this.value=\'\';nuevoEquipoDesdeModal();}"><option value="">-- Sin equipo --</option>';
+  html += '<select id="m-equipo"><option value="">-- Sin equipo --</option>';
   var eqsCliente = s ? (db.equiposDB||[]).filter(function(e){ return e.cliente===s.cliente; }) : [];
   eqsCliente.forEach(function(eq){
     var sel = s && s.equipoId===eq.id ? ' selected' : '';
@@ -2279,10 +2525,10 @@ function openServiceModal(id){
     label += (eq.modelo||'')+' · '+(eq.ubicacion||'')+' · '+(eq.marca||'');
     html += '<option value="'+eq.id+'"'+sel+'>'+escH(label.replace(/^ · | · $/g,'').replace(/ ·  · /g,' · '))+'</option>';
   });
-  html += '<option value="__nuevo__">── + Agregar equipo nuevo ──</option>';
+  html += '<option value="__nuevo__">\u2500\u2500 + Agregar equipo nuevo \u2500\u2500</option>';
   html += '</select></div>';
   html += '<div class="field"><label>Descripción <span style="font-weight:400;color:var(--text3)">(opcional)</span></label><textarea id="m-desc" placeholder="Descripción del trabajo">'+(s?escH(s.descripcion||''):'')+'</textarea></div>';
-  html += '<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label>Técnicos asignados</label><button type="button" onclick="abrirCalculadora()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--blue);border-radius:var(--radius-sm);background:var(--blue-light);color:var(--blue-text);font-size:13px;font-weight:700;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>Calculadora</button></div><div class="chips" id="chips-tec">';
+  html += '<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px"><label>Técnicos asignados</label><button type="button" onclick="abrirCalculadora()" style="display:flex;align-items:center;gap:5px;padding:4px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>Calculadora</button></div><div class="chips" id="chips-tec">';
   db.tecnicos.forEach(t=>{
     const sel = s && s.tecnicos && s.tecnicos.includes(t.id);
     html += '<div class="chip'+(sel?' sel':'')+'" data-tid="'+t.id+'">'+escH(t.nombre)+'</div>';
@@ -2308,12 +2554,16 @@ function openServiceModal(id){
   // m-cl usa buscarClienteDB() directamente (no setupAC)
   setupAC('m-zona', 'm-zona-list', ()=>db.zonas);
   renderItemsList();
-  setTimeout(verificarConflictoHora, 200);
   // Inicializar link de Maps y actualizar cuando cambia la zona
   setTimeout(()=>{
     updateMapsLink();
     const zonaInp = document.getElementById('m-zona');
     if(zonaInp) zonaInp.addEventListener('input', updateMapsLink);
+    // Listener del selector de equipo para detectar "Agregar nuevo"
+    var selEq = document.getElementById('m-equipo');
+    if(selEq) selEq.addEventListener('change', function(){
+      if(this.value === '__nuevo__'){ this.value = ''; nuevoEquipoDesdeModal(); }
+    });
   }, 0);
 
   if(s && s.repartoManual && Object.keys(s.repartoManual).length){
@@ -2356,11 +2606,7 @@ function cycleType(i){
 
 function renderAdelantoRow(i, rowEl){
   var existing = rowEl.parentNode.querySelector('#adelanto-row-'+i);
-  var tipo = modalItems[i].tipo;
-  if(tipo !== 'costo'){
-    if(existing) existing.remove();
-    return;
-  }
+  if(modalItems[i].tipo !== 'costo'){ if(existing) existing.remove(); return; }
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
   if(!selTecs.length){ if(existing) existing.remove(); return; }
   var adelantos = modalItems[i].adelantos || {};
@@ -2381,21 +2627,16 @@ function renderAdelantoRow(i, rowEl){
     '</div>';
   }).join('');
   var html = '<div id="adelanto-row-'+i+'" style="margin:-2px 0 8px 0;padding:10px 12px;background:var(--blue-light);border:1.5px solid var(--border2);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm)">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\uD83D\uDCB8 \u00BFQui\u00E9n adelant\u00F3 este importe?</div>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\ud83d\udcb8 \u00bfQui\u00e9n adelant\u00f3 este importe?</div>' +
     tecInputs +
     '<div class="adelanto-estado" style="font-size:11px;font-weight:600;color:'+estadoColor+';margin-top:6px;text-align:right">'+estadoTxt+'</div>' +
   '</div>';
-  if(existing){
-    existing.outerHTML = html;
-  } else {
-    rowEl.insertAdjacentHTML('afterend', html);
-  }
+  if(existing){ existing.outerHTML = html; } else { rowEl.insertAdjacentHTML('afterend', html); }
 }
 
 function onAdelantoInput(itemIdx, tecId, val){
   if(!modalItems[itemIdx].adelantos) modalItems[itemIdx].adelantos = {};
   modalItems[itemIdx].adelantos[tecId] = Number(val||0);
-  // Solo actualizar el texto de estado sin re-renderizar (para no perder el foco)
   var adelantos = modalItems[itemIdx].adelantos;
   var totalItem = Number(modalItems[itemIdx].importe||0) * Number(modalItems[itemIdx].qty||1);
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
@@ -2405,7 +2646,6 @@ function onAdelantoInput(itemIdx, tecId, val){
   if(estadoEl){
     estadoEl.style.color = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
     estadoEl.textContent = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
-    // Si está completo, cerrar el bloque después de un momento
     if(Math.abs(diferencia) < 1){
       var bloqueId = '#adelanto-row-'+itemIdx;
       setTimeout(function(){
@@ -2421,6 +2661,7 @@ function onAdelantoInput(itemIdx, tecId, val){
   }
   updateResumen();
 }
+
 function syncItems(){
   document.querySelectorAll('.irow').forEach((row,i)=>{
     if(i>=modalItems.length) return;
@@ -2443,9 +2684,6 @@ function renderItemsList(){
     '</div>'
   ).join('');
   modalItems.forEach((_,i)=>setupAC('idd-'+i,'idd-list-'+i,()=>db.itemDescs));
-  // Renderizar bloques de adelanto para ítems costo/gasto existentes
-  const rows = document.querySelectorAll('.irow');
-  modalItems.forEach(function(item,i){ if(item.tipo === 'costo' && rows[i]) renderAdelantoRow(i, rows[i]); });
   updateResumen();
 }
 function syncAndRefresh(){
@@ -2467,28 +2705,10 @@ function syncAndRefresh(){
 let repartoEditado = {}; // {tecId: valor} solo los que el usuario tocó
 
 function updateResumen(){
+  syncItems();
   const el = document.getElementById('resumen-box');
   if(!el) return;
-  // Sincronizar modalItems con los valores actuales del DOM
-  document.querySelectorAll('.irow').forEach(function(row, i){
-    if(i>=modalItems.length) return;
-    var q=row.querySelector('.iq'), im=row.querySelector('.ii');
-    if(q)  modalItems[i].qty     = q.value;
-    if(im) modalItems[i].importe = im.value;
-    // El tipo NO se sobreescribe acá — lo maneja cycleType
-  });
-  // Calcular sumas usando modalItems (tiene el tipo correcto) + DOM (tiene el importe actualizado)
-  const sum = tipo => {
-    let total = 0;
-    document.querySelectorAll('.irow').forEach(function(row, i){
-      var tipoVal = modalItems[i] ? (modalItems[i].tipo||'ingreso') : 'ingreso';
-      if(tipoVal !== tipo) return;
-      var imp = Number((row.querySelector('.ii')||{}).value||0);
-      var qty = Number((row.querySelector('.iq')||{}).value||1);
-      total += imp * qty;
-    });
-    return total;
-  };
+  const sum = tipo => modalItems.filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
   const ing=sum('ingreso'), cos=sum('costo'), gas=sum('gasto');
   const totC=ing+cos, base=ing-gas;
   const selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
@@ -2497,7 +2717,7 @@ function updateResumen(){
   // Calcular valores: editados usan repartoEditado, el resto reparte el sobrante
   const vals = calcReparto(selTecs, base);
 
-  // Calcular adelantos por técnico (suma de todos los ítems costo/gasto)
+  // Calcular adelantos por tecnico
   const adelantosPorTec = {};
   modalItems.forEach(function(item){
     if(item.tipo !== 'costo') return;
@@ -2521,27 +2741,13 @@ function updateResumen(){
     '</div></div>';
   }).join('');
 
-  el.innerHTML =
-    // ── TOTAL ───────────────────────────────────────────────────────
-    '<div style="margin-top:8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center">' +
-      '<span style="font-size:17px;font-weight:700;color:var(--text)">Total</span>' +
-      '<span style="font-size:20px;font-weight:800;color:var(--text)">$ '+fmt(totC)+'</span>' +
-    '</div>' +
-    // ── DESGLOSE INTERNO ────────────────────────────────────────────
-    '<div class="resumen" style="margin-top:10px">' +
-      '<div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Desglose interno</div>' +
-      '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
-      '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
-      '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
-      '<div class="rrow tot"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-      (selTecs.length ?
-        '<div style="border-top:1px solid var(--border2);margin-top:10px;padding-top:8px">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
-            '<div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Reparto por técnico</div>' +
-            '<button onclick="resetReparto()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border:1.5px solid var(--blue);border-radius:var(--radius-sm);background:var(--blue-light);color:var(--blue-text);font-size:13px;font-weight:700;cursor:pointer">Repartir</button>' +
-          '</div>' +
-          tecRows +
-        '</div>' : '') +
+  el.innerHTML = '<div class="resumen">' +
+    '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
+    '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
+    '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
+    '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
+    (selTecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:12px;font-weight:600;color:var(--text3)">Reparto por técnico (editable)</div><button onclick="resetReparto()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);cursor:pointer">↺ Reset</button></div>'+tecRows+'</div>' : '') +
     '</div>';
 }
 
@@ -2585,134 +2791,6 @@ function onRepartoInput(inp, editedId){
     const el = document.getElementById('rep-'+id);
     if(el) el.value = vals[id];
   });
-}
-
-function nuevoEquipoDesdeModal(){
-  var clienteNombre = (document.getElementById('m-cl')||{}).value||'';
-  if(!clienteNombre.trim()){ showAlert('Seleccioná un cliente primero'); return; }
-  // Guardar estado del pedido
-  syncItems();
-  window._estadoPedidoGuardado = {
-    id:       window._editingServiceId,
-    cliente:  (document.getElementById('m-cl')||{}).value||'',
-    tel:      (document.getElementById('m-tel')||{}).value||'',
-    dir:      (document.getElementById('m-dir')||{}).value||'',
-    zona:     (document.getElementById('m-zona')||{}).value||'',
-    tipo:     (document.getElementById('m-tipo')||{}).value||'',
-    estado:   (document.getElementById('m-est')||{}).value||'',
-    fecha:    (document.getElementById('m-fecha')||{}).value||'',
-    hora:     (document.getElementById('m-hora')||{}).value||'',
-    desc:     (document.getElementById('m-desc')||{}).value||'',
-    tecnicos: [...document.querySelectorAll('#chips-tec .chip.sel')].map(function(c){ return c.dataset.tid; }),
-    items:    JSON.parse(JSON.stringify(modalItems)),
-  };
-  window._nuevoEquipoCliente = clienteNombre;
-  // Abrir formulario de nuevo equipo
-  const TIPOS_EQ = ['Split','Central','Cassette','Piso-Techo','Ventana','Heladera','Lavarropas','Lavavajillas','Otro'];
-  const GASES    = ['R410A','R32','R22','R404A','R134a','R600a','Otro'];
-  var tOpts = TIPOS_EQ.map(function(t){ return '<option>'+t+'</option>'; }).join('');
-  var gOpts = GASES.map(function(g){ return '<option>'+g+'</option>'; }).join('');
-  var html = '<div class="mtitle">Nuevo equipo</div>';
-  html += '<div style="font-size:13px;color:var(--text2);margin-bottom:12px">Cliente: <strong>'+escH(clienteNombre)+'</strong></div>';
-  html += '<div class="frow"><div class="field"><label>Tipo *</label><select id="eq-tipo">'+tOpts+'</select></div>';
-  html += '<div class="field"><label>Ubicación</label><input id="eq-ubic" placeholder="Ej: Living, Cocina"></div></div>';
-  html += '<div class="frow"><div class="field"><label>Marca</label><input id="eq-marca" placeholder="Ej: Carrier"></div>';
-  html += '<div class="field"><label>Modelo</label><input id="eq-modelo" placeholder="Ej: 42KCC012DS"></div></div>';
-  html += '<div class="frow"><div class="field"><label>N° de serie</label><input id="eq-serie" placeholder="Número de serie"></div>';
-  html += '<div class="field"><label>Capacidad</label><input id="eq-cap" placeholder="Ej: 3000 frigorías"></div></div>';
-  html += '<div class="frow"><div class="field"><label>Tipo de gas</label><select id="eq-gas">'+gOpts+'</select></div>';
-  html += '<div class="field"><label>Fecha instalación</label><input type="date" id="eq-inst"></div></div>';
-  html += '<div class="frow"><div class="field"><label>Frecuencia mantenimiento (meses)</label><input type="number" id="eq-freq" value="6" min="1"></div>';
-  html += '<div class="field"><label>Próximo servicio</label><input type="date" id="eq-prox"></div></div>';
-  html += '<div class="mfoot"><button class="btn" onclick="cancelarNuevoEquipo()">Cancelar</button>';
-  html += '<button class="btn btn-primary" onclick="guardarNuevoEquipoDesdeModal()">Guardar equipo</button></div>';
-  showModal(html);
-}
-
-function cancelarNuevoEquipo(){
-  closeModal();
-  var ep = window._estadoPedidoGuardado;
-  if(ep) setTimeout(function(){ restaurarPedido(ep); }, 50);
-}
-
-function guardarNuevoEquipoDesdeModal(){
-  var clienteNombre = window._nuevoEquipoCliente||'';
-  var freq = parseInt((document.getElementById('eq-freq')||{}).value||6);
-  var prox = (document.getElementById('eq-prox')||{}).value||'';
-  if(!prox){ var d=new Date(); d.setMonth(d.getMonth()+freq); prox=d.toISOString().split('T')[0]; }
-  var data = {
-    id: 'eq_'+Date.now(),
-    cliente: clienteNombre,
-    tipo: (document.getElementById('eq-tipo')||{}).value||'Split',
-    marca: ((document.getElementById('eq-marca')||{}).value||'').trim(),
-    modelo: ((document.getElementById('eq-modelo')||{}).value||'').trim(),
-    serie: ((document.getElementById('eq-serie')||{}).value||'').trim(),
-    capacidad: ((document.getElementById('eq-cap')||{}).value||'').trim(),
-    gas: (document.getElementById('eq-gas')||{}).value||'R410A',
-    ubicacion: ((document.getElementById('eq-ubic')||{}).value||'').trim(),
-    fechaInstalacion: (document.getElementById('eq-inst')||{}).value||'',
-    frecuenciaMeses: freq,
-    proximoServicio: prox,
-    notas: '', historial: []
-  };
-  if(!db.equiposDB) db.equiposDB=[];
-  db.equiposDB.push(data);
-  saveDB();
-  actualizarBadgeEquipos();
-  closeModal();
-  var ep = window._estadoPedidoGuardado;
-  window._nuevoEquipoRecienCreado = data.id;
-  setTimeout(function(){ if(ep) restaurarPedido(ep); }, 50);
-}
-
-function restaurarPedido(ep){
-  openServiceModal(ep.id||null);
-  setTimeout(function(){
-    var set = function(id,val){ var el=document.getElementById(id); if(el&&val!==undefined) el.value=val; };
-    set('m-cl',   ep.cliente);
-    set('m-tel',  ep.tel);
-    set('m-dir',  ep.dir);
-    set('m-zona', ep.zona);
-    set('m-tipo', ep.tipo);
-    set('m-est',  ep.estado);
-    set('m-fecha',ep.fecha);
-    set('m-hora', ep.hora);
-    set('m-desc', ep.desc);
-    if(ep.tecnicos && ep.tecnicos.length){
-      document.querySelectorAll('#chips-tec .chip').forEach(function(c){
-        c.classList.toggle('sel', ep.tecnicos.indexOf(c.dataset.tid)>=0);
-      });
-    }
-    if(ep.items && ep.items.length){ modalItems=ep.items; renderItemsList(); }
-    // Seleccionar el nuevo equipo si fue creado
-    actualizarSelectorEquipo(ep.cliente);
-    setTimeout(function(){
-      var sel=document.getElementById('m-equipo');
-      if(sel && window._nuevoEquipoRecienCreado){ sel.value=window._nuevoEquipoRecienCreado; window._nuevoEquipoRecienCreado=null; }
-      updateResumen();
-    }, 150);
-    window._estadoPedidoGuardado = null;
-  }, 200);
-}
-
-function verificarConflictoHora(){
-  var fecha = (document.getElementById('m-fecha')||{}).value||'';
-  var hora  = (document.getElementById('m-hora')||{}).value||'';
-  var warnEl = document.getElementById('hora-conflict-warn');
-  if(!warnEl) return;
-  if(!fecha || !hora){ warnEl.style.display='none'; return; }
-  // Buscar pedidos en esa fecha y hora (excluyendo el actual si se está editando)
-  var editingId = window._editingServiceId ? Number(window._editingServiceId) : null;
-  var conflictos = db.servicios.filter(function(s){
-    return !s.facturado && s.fecha===fecha && s.hora===hora && Number(s.id)!==editingId;
-  });
-  if(conflictos.length){
-    var nombres = conflictos.map(function(s){ return s.cliente; }).join(', ');
-    warnEl.textContent = '⚠️ Ya hay un pedido a esa hora: '+nombres;
-    warnEl.style.display = 'block';
-  } else {
-    warnEl.style.display = 'none';
-  }
 }
 
 function saveService(id){
@@ -2836,42 +2914,29 @@ function showModal(html){
   const root = document.getElementById('modal-root');
   root.innerHTML = '';
   root.appendChild(ov);
-  // Push estado para que el botón Atrás del teléfono cierre el modal
-  history.pushState({modal:true}, '');
+  if(currentUser) history.pushState({modal:true}, '');
 }
-var _closingModal = false; // bandera para ignorar popstate interno
-
 function closeModal(){
   document.getElementById('modal-root').innerHTML = '';
-  if(history.state && history.state.modal){
-    _closingModal = true;
-    history.back();
+  if(currentUser && history.state && history.state.modal){
+    history.replaceState({modal:false}, '');
   }
 }
 
-// ── BOTÓN ATRÁS DEL TELÉFONO ────────────────────────────────────────
+// Boton atras del telefono
 window.addEventListener('popstate', function(e){
-  // Si lo disparó closeModal internamente, ignorar
-  if(_closingModal){ _closingModal = false; return; }
-
+  if(!currentUser) return;
   var modalRoot = document.getElementById('modal-root');
-  // Si hay un modal abierto, cerrarlo sin confirmación
   if(modalRoot && modalRoot.innerHTML.trim() !== ''){
     modalRoot.innerHTML = '';
-    history.pushState(null, ''); // reponer estado
+    history.pushState({modal:false}, '');
     return;
   }
-  // Si no hay modal, preguntar si quiere salir de la app
-  if(currentUser){
-    history.pushState(null, ''); // reponer estado antes de preguntar
-    if(confirm('¿Salir de la aplicación?')){
-      auth.signOut();
-    }
+  history.pushState({modal:false}, '');
+  if(confirm('¿Salir de la aplicación?')){
+    auth.signOut();
   }
 });
-
-// Inicializar estado del historial al cargar
-history.pushState(null, '');
 
 
 // ── CONFIGURACIÓN ─────────────────────────────────────────────────────
@@ -2899,57 +2964,21 @@ function abrirConfiguracion(){
   html += '<div class="field"><label>Leyenda pie de presupuesto</label><textarea id="cfg-pie" placeholder="Texto que aparece al pie del presupuesto">'+escH(c.piePresupuesto||'')+'</textarea></div>';
 
   html += '<hr style="border:none;border-top:1px solid var(--border);margin:8px 0">';
-  html += '<div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:4px">IMÁGENES DE LA APP</div>';
-  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:14px">Las imágenes se usan en distintos lugares de la app. Cada una tiene requisitos diferentes.</div>';
-
-  // ── 1. LOGO DE LA EMPRESA ──────────────────────────────────────────
+  html += '<div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-bottom:10px">LOGO DE LA EMPRESA</div>';
+  html += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">';
+  // Preview del logo actual
   var logoActual = (db.config && db.config.logo) ? db.config.logo : '';
-  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:12px">';
-  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
-  // Preview
-  html += '<div style="flex-shrink:0">';
   if(logoActual){
-    html += '<img src="'+logoActual+'" style="width:80px;height:80px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">';
+    html += '<img src="'+logoActual+'" style="width:72px;height:72px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">';
   } else {
-    html += '<div style="width:80px;height:80px;border-radius:8px;border:2px dashed var(--border2);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
-    html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
-    html += '<span style="font-size:10px;color:var(--text3);text-align:center">Sin logo</span></div>';
+    html += '<div style="width:72px;height:72px;border-radius:8px;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:11px;text-align:center">Sin logo</div>';
   }
-  html += '</div>';
-  // Info
-  html += '<div style="flex:1;min-width:0">';
-  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">1 · Logo de la empresa</div>';
-  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se muestra en los <strong>presupuestos PDF</strong>, en la <strong>pantalla de login</strong> y en la <strong>barra superior</strong> de la app.<br>Formato: PNG o JPG · Fondo blanco o transparente · Cuadrado · Mínimo 200×200 px · Máximo 500 KB</div>';
-  html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
-  html += '<label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">📁 Seleccionar imagen<input type="file" id="cfg-logo-input" accept="image/png,image/jpeg,image/jpg" style="display:none" onchange="previewLogo(this)"></label>';
-  if(logoActual) html += '<button class="btn btn-xs btn-danger" onclick="quitarLogo()">Quitar logo</button>';
-  html += '</div>';
-  html += '<div id="cfg-logo-preview" style="margin-top:8px"></div>';
-  html += '</div></div></div>';
-
-  // ── 2. ÍCONO PWA 192×192 ──────────────────────────────────────────
-  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:12px">';
-  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
-  html += '<div style="flex-shrink:0;width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
-  html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg>';
-  html += '<span style="font-size:10px;color:var(--text3);text-align:center">icon-192</span></div>';
-  html += '<div style="flex:1;min-width:0">';
-  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">2 · Ícono de la app (192×192 px)</div>';
-  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se usa cuando alguien instala la app en <strong>Android</strong> o en el menú de apps de Chrome. También es el ícono de acceso directo.<br>Formato: PNG · Fondo sólido (preferentemente azul <code style="background:var(--surface);padding:1px 5px;border-radius:3px">#1a3a6b</code>) · Exactamente <strong>192×192 px</strong> · Máximo 200 KB<br>Nombre del archivo: <code style="background:var(--surface);padding:1px 5px;border-radius:3px">icon-192.png</code> · Se sube a GitHub junto con el index.html</div>';
-  html += '<div class="alert ai" style="font-size:12px;padding:8px 12px;margin:0">⚠️ Este archivo se sube manualmente a GitHub. No se guarda aquí.</div>';
-  html += '</div></div></div>';
-
-  // ── 3. ÍCONO PWA 512×512 ──────────────────────────────────────────
-  html += '<div style="background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:4px">';
-  html += '<div style="display:flex;align-items:flex-start;gap:14px">';
-  html += '<div style="flex-shrink:0;width:80px;height:80px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">';
-  html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--text3)"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>';
-  html += '<span style="font-size:10px;color:var(--text3);text-align:center">icon-512</span></div>';
-  html += '<div style="flex:1;min-width:0">';
-  html += '<div style="font-weight:700;font-size:14px;margin-bottom:3px">3 · Ícono splash screen (512×512 px)</div>';
-  html += '<div style="font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5">Se usa en la <strong>pantalla de carga</strong> (splash screen) cuando se abre la app instalada en Android, y como miniatura en tiendas si la app fuera publicada.<br>Formato: PNG · Mismo diseño que el de 192 px pero más grande · Exactamente <strong>512×512 px</strong> · Máximo 500 KB<br>Nombre del archivo: <code style="background:var(--surface);padding:1px 5px;border-radius:3px">icon-512.png</code> · Se sube a GitHub junto con el index.html</div>';
-  html += '<div class="alert ai" style="font-size:12px;padding:8px 12px;margin:0">⚠️ Este archivo se sube manualmente a GitHub. No se guarda aquí.</div>';
-  html += '</div></div></div>';
+  html += '<div style="flex:1">';
+  html += '<label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">📁 Seleccionar imagen<input type="file" id="cfg-logo-input" accept="image/png,image/jpeg,image/jpg,image/svg+xml" style="display:none" onchange="previewLogo(this)"></label>';
+  html += '<div style="font-size:11px;color:var(--text3);margin-top:6px">PNG o JPG · fondo transparente o blanco · mínimo 200×200px · máximo 500KB</div>';
+  if(logoActual) html += '<button class="btn btn-xs btn-danger" style="margin-top:6px" onclick="quitarLogo()">Quitar logo</button>';
+  html += '</div></div>';
+  html += '<div id="cfg-logo-preview" style="margin-bottom:4px"></div>';
 
   html += '<div class="mfoot">';
   html += '<button class="btn" onclick="closeModal()">Cancelar</button>';
