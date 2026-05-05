@@ -2029,19 +2029,226 @@ function viewService(id){
 
 // ── AGENDA ────────────────────────────────────────────────────────────
 let calY = new Date().getFullYear(), calM = new Date().getMonth();
+var _climaData = null; // {current, daily} cacheado de Open-Meteo
+var _climaLoading = false;
+var _climaZona = '';
+
+// Íconos WMO → emoji + descripción (con detección de noche)
+function wmoInfo(code, hora){
+  // hora puede ser un número 0-23; si no se pasa, usar hora actual
+  var h = (hora !== undefined) ? hora : new Date().getHours();
+  var esNoche = h < 6 || h >= 20;
+  if(code===0)  return {i: esNoche ? '🌙' : '☀️', d: esNoche ? 'Despejado' : 'Despejado'};
+  if(code<=2)   return {i: esNoche ? '🌙' : '⛅', d:'Parcialmente nublado'};
+  if(code===3)  return {i:'☁️', d:'Nublado'};
+  if(code<=49)  return {i:'🌫️', d:'Niebla'};
+  if(code<=59)  return {i:'🌦️', d:'Llovizna'};
+  if(code<=69)  return {i:'🌧️', d:'Lluvia'};
+  if(code<=79)  return {i:'🌨️', d:'Nieve'};
+  if(code<=82)  return {i:'🌧️', d:'Lluvia intensa'};
+  if(code<=84)  return {i:'🌩️', d:'Granizo'};
+  if(code<=99)  return {i:'⛈️', d:'Tormenta'};
+  return {i:'🌡️', d:'Desconocido'};
+}
+
+function fetchClima(){
+  if(_climaLoading) return;
+  _climaLoading = true;
+  var climaEl = document.getElementById('clima-widget');
+  if(climaEl) climaEl.innerHTML = '<span style="font-size:12px;color:var(--text3)">📍 Obteniendo ubicación...</span>';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = pos.coords.latitude.toFixed(4);
+    var lon = pos.coords.longitude.toFixed(4);
+    fetch('https://nominatim.openstreetmap.org/reverse?lat='+lat+'&lon='+lon+'&format=json')
+      .then(function(r){ return r.json(); })
+      .then(function(geo){ var a=geo.address||{}; _climaZona=a.suburb||a.neighbourhood||a.city_district||a.town||a.city||''; })
+      .catch(function(){ _climaZona=''; });
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+
+      '&current=temperature_2m,weathercode,apparent_temperature,wind_speed_10m,relative_humidity_2m'+
+      '&hourly=temperature_2m,weathercode,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m'+
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max'+
+      '&timezone=America/Argentina/Buenos_Aires&forecast_days=14';
+    fetch(url).then(function(r){ return r.json(); }).then(function(data){
+      _climaData = data;
+      _climaLoading = false;
+      renderClimaWidget();
+    }).catch(function(){
+      _climaLoading = false;
+      var el = document.getElementById('clima-widget');
+      if(el) el.innerHTML = '<span style="font-size:12px;color:var(--text3)">⚠️ Sin datos de clima</span>';
+    });
+  }, function(){
+    _climaLoading = false;
+    _climaZona = 'Buenos Aires';
+    // Fallback: Buenos Aires centro
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=-34.6037&longitude=-58.3816'+
+      '&current=temperature_2m,weathercode,apparent_temperature,wind_speed_10m,relative_humidity_2m'+
+      '&hourly=temperature_2m,weathercode,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m'+
+      '&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max'+
+      '&timezone=America/Argentina/Buenos_Aires&forecast_days=14';
+    fetch(url).then(function(r){ return r.json(); }).then(function(data){
+      _climaData = data;
+      renderClimaWidget();
+    }).catch(function(){
+      var el = document.getElementById('clima-widget');
+      if(el) el.innerHTML = '<span style="font-size:12px;color:var(--text3)">⚠️ Sin datos de clima</span>';
+    });
+  }, {timeout:8000});
+}
+
+function renderClimaWidget(ds){
+  var el = document.getElementById('clima-widget');
+  if(!el || !_climaData) return;
+  var c = _climaData.current;
+  var daily = _climaData.daily;
+  var hourly = _climaData.hourly;
+  var todayS = new Date().toISOString().split('T')[0];
+  var isToday = !ds || ds === todayS;
+
+  // Si se pasa una fecha, usar datos del daily para ese día
+  var info, maxT, minT, rainP, rainMm, wMax, rc, tempShow, sensacion;
+  if(!isToday && daily){
+    var idx = daily.time.indexOf(ds);
+    if(idx >= 0){
+      var code = daily.weathercode[idx];
+      info   = wmoInfo(code);
+      maxT   = Math.round(daily.temperature_2m_max[idx]);
+      minT   = Math.round(daily.temperature_2m_min[idx]);
+      rainP  = daily.precipitation_probability_max[idx];
+      rainMm = (daily.precipitation_sum[idx]||0).toFixed(1);
+      wMax   = Math.round(daily.wind_speed_10m_max[idx]||0);
+      rc     = rainP>=60?'#ef4444':rainP>=30?'#f97316':'var(--text2)';
+      tempShow = Math.round((maxT+minT)/2);
+      sensacion = '';
+    } else { isToday = true; }
+  }
+  if(isToday){
+    info     = wmoInfo(c.weathercode);
+    maxT     = Math.round(daily.temperature_2m_max[0]);
+    minT     = Math.round(daily.temperature_2m_min[0]);
+    rainP    = daily.precipitation_probability_max[0];
+    rainMm   = (daily.precipitation_sum[0]||0).toFixed(1);
+    wMax     = Math.round(daily.wind_speed_10m_max[0]||0);
+    rc       = rainP>=60?'#ef4444':rainP>=30?'#f97316':'var(--text2)';
+    tempShow = Math.round(c.temperature_2m);
+    sensacion = '<div style="font-size:11px;color:var(--text3)">Sensaci\u00f3n '+Math.round(c.apparent_temperature)+'\u00b0</div>';
+  }
+
+  // Fecha + zona a mostrar
+  var zonaStr = _climaZona ? ' \u2014 <span style="font-weight:400;color:var(--text3)">' + _climaZona + '</span>' : '';
+  var fechaLabel = isToday ? 'Hoy \u2014 '+fmtDate(todayS)+zonaStr : fmtDate(ds)+zonaStr;
+
+  // Horas del día completo (00-23), sin slice
+  var nowH = isToday ? new Date().getHours() : 0;
+  var targetDay = isToday ? todayS : ds;
+  var horas = [];
+  var horaActualIdx = 0;
+  if(hourly && hourly.time){
+    for(var hi=0;hi<hourly.time.length;hi++){
+      var ht=hourly.time[hi], htd=ht.split('T')[0], hth=parseInt(ht.split('T')[1]);
+      if(htd===targetDay){
+        if(hth === nowH) horaActualIdx = horas.length;
+        horas.push({h:hth,temp:Math.round(hourly.temperature_2m[hi]),
+          wmo:hourly.weathercode[hi],prob:hourly.precipitation_probability[hi],
+          prec:hourly.precipitation[hi]||0,viento:Math.round(hourly.wind_speed_10m[hi]),
+          hum:hourly.relative_humidity_2m[hi]});
+      }
+    }
+  }
+  var horasHtml='';
+  if(horas.length){
+    var horasTitulo = isToday ? 'HORAS DEL D\u00cdA' : 'HORAS DEL D\u00cdA';
+    horasHtml='<div style="margin-top:14px">'+
+      '<div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.4px;margin-bottom:8px">'+horasTitulo+'</div>'+
+      '<div id="clima-horas-scroll" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-behavior:smooth">';
+    horas.forEach(function(h){
+      var hi2=wmoInfo(h.wmo, h.h);
+      var pc=h.prob>=60?'#ef4444':h.prob>=30?'#f97316':'var(--text3)';
+      var isNow = isToday && h.h === nowH;
+      var bg = isNow ? 'var(--blue)' : 'var(--surface2)';
+      var border = isNow ? 'var(--blue)' : 'var(--border)';
+      var txtColor = isNow ? '#fff' : 'var(--text)';
+      var metaColor = isNow ? 'rgba(255,255,255,0.8)' : 'var(--text2)';
+      horasHtml+='<div style="flex-shrink:0;background:'+bg+';border:1.5px solid '+border+';border-radius:10px;padding:8px 10px;text-align:center;min-width:66px">'+
+        '<div style="font-size:11px;font-weight:700;color:'+metaColor+'">'+(h.h<10?'0':'')+h.h+':00</div>'+
+        '<div style="font-size:20px;margin:3px 0">'+hi2.i+'</div>'+
+        '<div style="font-size:13px;font-weight:700;color:'+txtColor+'">'+h.temp+'\u00b0</div>'+
+        '<div style="font-size:10px;color:'+(isNow?'rgba(255,255,255,0.9)':pc)+';font-weight:600">'+h.prob+'%</div>'+
+        (h.prec>0?'<div style="font-size:10px;color:'+(isNow?'rgba(255,255,255,0.8)':'#7dd3fc')+'">'+h.prec.toFixed(1)+'mm</div>':'')+
+        '<div style="font-size:10px;color:'+(isNow?'rgba(255,255,255,0.7)':'var(--text3)')+'">'+h.viento+'km/h</div>'+
+      '</div>';
+    });
+    horasHtml+='</div></div>';
+  }
+
+  el.innerHTML=
+    '<div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:12px">'+fechaLabel+'</div>'+
+    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'+
+      '<div style="display:flex;align-items:center;gap:10px">'+
+        '<span style="font-size:40px;line-height:1">'+info.i+'</span>'+
+        '<div>'+
+          '<div style="font-size:32px;font-weight:700;color:var(--text);line-height:1">'+tempShow+'\u00b0</div>'+
+          '<div style="font-size:12px;color:var(--text2)">'+info.d+'</div>'+
+          (sensacion||'')+
+        '</div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:auto auto;gap:4px 16px;flex:1;min-width:180px">'+
+        '<div style="font-size:12px;color:var(--text2)">M\u00e1x / M\u00edn</div>'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">'+maxT+'\u00b0 / '+minT+'\u00b0</div>'+
+        '<div style="font-size:12px;color:var(--text2)">Lluvia</div>'+
+        '<div style="font-size:12px;font-weight:700;color:'+rc+'">'+rainP+'% \u00b7 '+rainMm+' mm</div>'+
+        '<div style="font-size:12px;color:var(--text2)">Viento</div>'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">'+(isToday?Math.round(c.wind_speed_10m)+' km/h (max '+wMax+')':wMax+' km/h m\u00e1x')+'</div>'+
+        '<div style="font-size:12px;color:var(--text2)">Humedad</div>'+
+        '<div style="font-size:12px;font-weight:700;color:var(--text)">'+(isToday?c.relative_humidity_2m:'—')+'%</div>'+
+      '</div>'+
+    '</div>'+
+    horasHtml;
+  // Scroll centrado en hora actual (hoy) o en las 9hs (otros días)
+  if(horas.length > 0){
+    setTimeout(function(){
+      var sc = document.getElementById('clima-horas-scroll');
+      if(!sc) return;
+      var cardW = 66 + 8;
+      var idxRef = isToday ? horaActualIdx : 9; // hoy→hora actual, resto→9hs
+      var scrollPos = idxRef * cardW - (sc.clientWidth / 2) + (cardW / 2);
+      sc.scrollLeft = Math.max(0, scrollPos);
+    }, 50);
+  }
+}
+
+function getClimaForDay(ds){
+  if(!_climaData || !_climaData.daily) return null;
+  var idx = _climaData.daily.time.indexOf(ds);
+  if(idx < 0) return null;
+  return {
+    max:    Math.round(_climaData.daily.temperature_2m_max[idx]),
+    min:    Math.round(_climaData.daily.temperature_2m_min[idx]),
+    code:   _climaData.daily.weathercode[idx],
+    rain:   _climaData.daily.precipitation_probability_max[idx],
+    mm:     (_climaData.daily.precipitation_sum[idx]||0).toFixed(1),
+    viento: Math.round(_climaData.daily.wind_speed_10m_max[idx]||0),
+  };
+}
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS  = ['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 function renderAgenda(){
   document.getElementById('page-agenda').innerHTML =
     '<div class="page-header"><div class="page-title">Agenda</div></div>' +
+    '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;min-height:56px" id="clima-widget">' +
+      '<span style="font-size:12px;color:var(--text3)">\u23f3 Cargando clima...</span>' +
+    '</div>' +
     '<div class="cal-nav"><button class="btn btn-sm" onclick="changeMonth(-1)">&#8592;</button>' +
     '<span class="cal-month" id="cal-label"></span>' +
     '<button class="btn btn-sm" onclick="changeMonth(1)">&#8594;</button></div>' +
     '<div id="cal-grid-wrap"></div>' +
     '<div id="cal-day-detail" style="margin-top:14px"></div>';
   renderCal();
+  // Usar datos cacheados o fetchear
+  if(_climaData) renderClimaWidget();
+  else fetchClima();
 }
-function changeMonth(d){ calM+=d; if(calM>11){calM=0;calY++;}else if(calM<0){calM=11;calY--;} renderCal(); }
+function changeMonth(d){ calM+=d; if(calM>11){calM=0;calY++;}else if(calM<0){calM=11;calY--;} renderCal(); renderClimaWidget(); }
 function calDayColor(cnt){
   if(cnt===0) return '';
   if(cnt===1) return 'background:#16a34a;border-color:#16a34a;';
@@ -2093,19 +2300,22 @@ function showDayDetail(d){
   const ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   const svcs = getVisible().filter(s=>s.fecha===ds && !s.facturado);
   const el = document.getElementById('cal-day-detail');
-  let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+  // Actualizar widget de clima con la fecha seleccionada
+  renderClimaWidget(ds);
+  let html =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<div style="font-size:13px;font-weight:600;color:var(--text2)">'+fmtDate(ds)+'</div>' +
     '<button class="btn btn-primary btn-sm" onclick="nuevoPedidoDesdeCalendario(\''+ds+'\')">+ Nuevo pedido</button>' +
   '</div>';
   if(!svcs.length){
-    html += '<div class="empty" style="padding:12px 0">Sin servicios pendientes este día</div>';
+    html += '<div class="empty" style="padding:12px 0">Sin servicios pendientes este d\u00eda</div>';
   } else {
     html += svcs.map(s=>{
       const tecs=db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id)).map(t=>t.nombre).join(', ');
       return '<div class="scard" style="margin-bottom:8px;cursor:pointer" onclick="openServiceModal('+s.id+')">' +
         '<div class="scard-name">'+escH(s.cliente)+'</div>' +
-        '<div class="scard-meta">'+escH(s.tipo)+(s.hora?' · ⏰ '+s.hora:'')+'</div>' +
-        (tecs?'<div class="scard-meta">👷 '+tecs+'</div>':'')+
+        '<div class="scard-meta">'+escH(s.tipo)+(s.hora?' \u00b7 \u23f0 '+s.hora:'')+'</div>' +
+        (tecs?'<div class="scard-meta">\ud83d\udc77 '+tecs+'</div>':'')+
       '</div>';
     }).join('');
   }
