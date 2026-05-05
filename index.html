@@ -2248,7 +2248,7 @@ function renderEstadisticas(){
     '<div style="margin-top:20px">' +
       '<div style="font-size:14px;font-weight:700;color:var(--text2);margin-bottom:12px;letter-spacing:.3px">📊 Gráficos</div>' +
       // Fila 1: Facturación por técnico + Cantidad de servicios
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:12px">' +
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Facturación mensual por técnico</div><div style="position:relative;height:220px"><canvas id="chart-tec"></canvas></div></div>' +
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Cantidad de servicios por mes</div><div style="position:relative;height:220px"><canvas id="chart-svcs"></canvas></div></div>' +
       '</div>' +
@@ -2257,7 +2257,7 @@ function renderEstadisticas(){
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Ingresos vs Costos vs Gastos mensual</div><div style="position:relative;height:200px"><canvas id="chart-fin"></canvas></div></div>' +
       '</div>' +
       // Fila 3: Torta tipo + Zonas + Ticket promedio
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">' +
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Distribución por tipo</div><div style="position:relative;height:220px"><canvas id="chart-tipo"></canvas></div></div>' +
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Servicios por zona</div><div style="position:relative;height:220px"><canvas id="chart-zona"></canvas></div></div>' +
         '<div class="scard" style="padding:14px"><div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:10px">Ticket promedio por tipo</div><div style="position:relative;height:220px"><canvas id="chart-ticket"></canvas></div></div>' +
