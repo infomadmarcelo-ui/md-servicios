@@ -514,8 +514,11 @@ function calcFin(s){
   const items = s.items || [];
   const sum = tipo => items.filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
   const ingresos = sum('ingreso'), costos = sum('costo'), gastos = sum('gasto');
+  const propina = Number(s.propina||0);
+  const anticipoCliente = Number(s.anticipoCliente||0);
   const totalCliente = ingresos + costos;
-  const baseReparto  = ingresos - gastos;
+  const saldoPendiente = totalCliente - anticipoCliente;
+  const baseReparto  = ingresos - gastos + propina;
   const tids = s.tecnicos || [];
   const n = tids.length || 1;
   let rMap = {};
@@ -524,7 +527,7 @@ function calcFin(s){
   } else {
     tids.forEach(id=>{ rMap[id] = Math.round(baseReparto/n); });
   }
-  return { ingresos, costos, gastos, totalCliente, baseReparto, rMap };
+  return { ingresos, costos, gastos, propina, anticipoCliente, totalCliente, saldoPendiente, baseReparto, rMap };
 }
 
 // ── ALERT/CONFIRM PROPIOS (confirm/alert nativo no funciona en iframe) ──
@@ -1822,16 +1825,17 @@ function viewPendiente(id){
     }).join('');
   }
 
-  const sum = tipo => (s.items||[]).filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
-  const ing=sum('ingreso'), cos=sum('costo'), gas=sum('gasto');
-  const totC=ing+cos, base=ing-gas;
+  const ing=f.ingresos, cos=f.costos, gas=f.gastos, totC=f.totalCliente, base=f.baseReparto;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
   html += '<div class="resumen" style="margin-top:10px">' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
+    (f.propina>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Propina</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(f.propina)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    (f.anticipoCliente>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(f.anticipoCliente)+'</span></div>'+
+      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
@@ -2007,16 +2011,17 @@ function viewService(id){
   }
 
   // resumen financiero
-  const sum = tipo => (s.items||[]).filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
-  const ing=sum('ingreso'), cos=sum('costo'), gas=sum('gasto');
-  const totC=ing+cos, base=ing-gas;
+  const ing=f.ingresos, cos=f.costos, gas=f.gastos, totC=f.totalCliente, base=f.baseReparto;
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
 
   html += '<div class="resumen" style="margin-top:10px">' +
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
+    (f.propina>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Propina</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(f.propina)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    (f.anticipoCliente>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(f.anticipoCliente)+'</span></div>'+
+      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
@@ -2745,6 +2750,10 @@ function openServiceModal(id){
     html += '<div class="chip'+(sel?' sel':'')+'" data-tid="'+t.id+'">'+escH(t.nombre)+'</div>';
   });
   html += '</div></div>';
+  html += '<div class="frow">';
+  html += '<div class="field"><label>Anticipo del cliente <span style="font-weight:400;color:var(--text3)">(seña, opcional)</span></label><input type="number" min="0" id="m-anticipo" value="'+(s&&s.anticipoCliente?s.anticipoCliente:'')+'" placeholder="0" oninput="syncAndRefresh()"></div>';
+  html += '<div class="field"><label>Propina <span style="font-weight:400;color:var(--text3)">(opcional)</span></label><input type="number" min="0" id="m-propina" value="'+(s&&s.propina?s.propina:'')+'" placeholder="0" oninput="syncAndRefresh()"></div>';
+  html += '</div>';
   html += '<hr style="border:none;border-top:1px solid var(--border);margin:14px 0">';
   html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
   html += '<div style="font-size:13px;font-weight:600;color:var(--text2)">Ítems del servicio</div>';
@@ -2819,27 +2828,27 @@ function renderAdelantoRow(i, rowEl){
   var existing = rowEl.parentNode.querySelector('#adelanto-row-'+i);
   if(modalItems[i].tipo !== 'costo'){ if(existing) existing.remove(); return; }
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
-  if(!selTecs.length){ if(existing) existing.remove(); return; }
   var adelantos = modalItems[i].adelantos || {};
   var totalItem = Number(modalItems[i].importe||0) * Number(modalItems[i].qty||1);
-  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var pagadores = ['cliente'].concat(selTecs);
+  var totalAdelantado = pagadores.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
   var diferencia = totalItem - totalAdelantado;
   var estadoColor = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
   var estadoTxt = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
-  var tecInputs = selTecs.map(function(id){
-    var t = db.tecnicos.find(function(x){ return x.id===id; });
-    var nombre = t ? t.nombre : id;
+  var pagadorInputs = pagadores.map(function(id){
+    var esCliente = id==='cliente';
+    var nombre = esCliente ? 'Cliente' : (function(){ var t=db.tecnicos.find(function(x){ return x.id===id; }); return t?t.nombre:id; })();
     var val = adelantos[id] || '';
     return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
-      '<span style="min-width:72px;font-size:12px;font-weight:600;color:var(--text2)">'+nombre+'</span>' +
+      '<span style="min-width:72px;font-size:12px;font-weight:600;color:'+(esCliente?'var(--yellow-text)':'var(--text2)')+'">'+nombre+'</span>' +
       '<input type="number" min="0" value="'+val+'" placeholder="0" ' +
       'style="flex:1;padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px" ' +
       'oninput="onAdelantoInput('+i+',\''+id+'\',this.value)">' +
     '</div>';
   }).join('');
   var html = '<div id="adelanto-row-'+i+'" style="margin:-2px 0 8px 0;padding:10px 12px;background:var(--blue-light);border:1.5px solid var(--border2);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm)">' +
-    '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\ud83d\udcb8 \u00bfQui\u00e9n adelant\u00f3 este importe?</div>' +
-    tecInputs +
+    '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\ud83d\udcb8 \u00bfQui\u00e9n pag\u00f3 este material? (cliente y/o t\u00e9cnicos)</div>' +
+    pagadorInputs +
     '<div class="adelanto-estado" style="font-size:11px;font-weight:600;color:'+estadoColor+';margin-top:6px;text-align:right">'+estadoTxt+'</div>' +
   '</div>';
   if(existing){ existing.outerHTML = html; } else { rowEl.insertAdjacentHTML('afterend', html); }
@@ -2851,7 +2860,8 @@ function onAdelantoInput(itemIdx, tecId, val){
   var adelantos = modalItems[itemIdx].adelantos;
   var totalItem = Number(modalItems[itemIdx].importe||0) * Number(modalItems[itemIdx].qty||1);
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
-  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var pagadores = ['cliente'].concat(selTecs);
+  var totalAdelantado = pagadores.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
   var diferencia = totalItem - totalAdelantado;
   var estadoEl = document.querySelector('#adelanto-row-'+itemIdx+' .adelanto-estado');
   if(estadoEl){
@@ -2895,6 +2905,8 @@ function renderItemsList(){
     '</div>'
   ).join('');
   modalItems.forEach((_,i)=>setupAC('idd-'+i,'idd-list-'+i,()=>db.itemDescs));
+  const rows = document.querySelectorAll('.irow');
+  modalItems.forEach((item,i)=>{ if(item.tipo==='costo' && rows[i]) renderAdelantoRow(i, rows[i]); });
   updateResumen();
 }
 function syncAndRefresh(){
@@ -2921,12 +2933,18 @@ function updateResumen(){
   if(!el) return;
   const sum = tipo => modalItems.filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
   const ing=sum('ingreso'), cos=sum('costo'), gas=sum('gasto');
-  const totC=ing+cos, base=ing-gas;
+  const propinaEl = document.getElementById('m-propina');
+  const anticipoEl = document.getElementById('m-anticipo');
+  const propina = propinaEl ? Number(propinaEl.value||0) : 0;
+  const anticipo = anticipoEl ? Number(anticipoEl.value||0) : 0;
+  const totC=ing+cos, base=ing-gas+propina, saldoPend=totC-anticipo;
   const selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
   const n = selTecs.length || 1;
 
   // Calcular valores: editados usan repartoEditado, el resto reparte el sobrante
   const vals = calcReparto(selTecs, base);
+  const sumaVals = selTecs.reduce((a,id)=>a+(vals[id]||0),0);
+  const diffBase = base - sumaVals;
 
   // Calcular adelantos por tecnico
   const adelantosPorTec = {};
@@ -2956,9 +2974,15 @@ function updateResumen(){
     '<div class="rrow"><span style="color:var(--green-text)">▶ Ingresos (mano de obra)</span><span style="color:var(--green-text);font-weight:600">$ '+fmt(ing)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--blue-text)">▶ Costos (materiales)</span><span style="color:var(--blue-text);font-weight:600">$ '+fmt(cos)+'</span></div>' +
     '<div class="rrow"><span style="color:var(--red-text)">▼ Gastos operativos</span><span style="color:var(--red-text);font-weight:600">− $ '+fmt(gas)+'</span></div>' +
+    (propina>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Propina</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(propina)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
+    (anticipo>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(anticipo)+'</span></div>'+
+      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(saldoPend)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
-    (selTecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:12px;font-weight:600;color:var(--text3)">Reparto por técnico (editable)</div><button onclick="resetReparto()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);cursor:pointer">↺ Reset</button></div>'+tecRows+'</div>' : '') +
+    (selTecs.length ? (
+      (Math.abs(diffBase)>=1 ? '<div class="alert aw" style="margin-top:8px;padding:8px 10px;font-size:12px">⚠️ El reparto no coincide con la base (dif. $'+fmt(Math.abs(diffBase))+'). Tocá <strong>↺ Reset</strong> para recalcular.</div>' : '') +
+      '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:12px;font-weight:600;color:var(--text3)">Reparto por técnico (editable)</div><button onclick="resetReparto()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);cursor:pointer">↺ Reset</button></div>'+tecRows+'</div>'
+    ) : '') +
     '</div>';
 }
 
@@ -2991,7 +3015,8 @@ function onRepartoInput(inp, editedId){
   // Recalcular y actualizar los campos libres sin re-renderizar
   const selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
   const sum = tipo => modalItems.filter(i=>i.tipo===tipo).reduce((a,i)=>a+Number(i.importe||0)*Number(i.qty||1),0);
-  const base = sum('ingreso') - sum('gasto');
+  const propinaEl = document.getElementById('m-propina');
+  const base = sum('ingreso') - sum('gasto') + (propinaEl ? Number(propinaEl.value||0) : 0);
 
   const vals = calcReparto(selTecs, base);
 
@@ -3029,6 +3054,8 @@ function saveService(id){
     tecnicos,
     equipoId:   document.getElementById('m-equipo') ? document.getElementById('m-equipo').value : '',
     items:      modalItems.filter(i=>i.desc||Number(i.importe)),
+    propina:        Number(document.getElementById('m-propina').value||0),
+    anticipoCliente: Number(document.getElementById('m-anticipo').value||0),
     repartoManual: Object.keys(repartoManual).length ? repartoManual : {}
   };
   if(id){ Object.assign(db.servicios.find(s=>Number(s.id)===Number(id)), data); }
