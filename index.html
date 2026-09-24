@@ -2784,8 +2784,8 @@ function openServiceModal(id){
   }, 0);
 
   if(s && s.repartoManual && Object.keys(s.repartoManual).length){
-    // Restaurar todos los valores guardados como "editados" para que se muestren correctamente
-    repartoEditado = {...s.repartoManual};
+    // Mostrar el reparto guardado, pero sin "congelarlo": si después se
+    // modifica algún dato, vuelve a recalcularse solo (no queda fijo).
     Object.entries(s.repartoManual).forEach(([tid,val])=>{
       const inp = document.getElementById('rep-'+tid);
       if(inp) inp.value = val;
@@ -2825,13 +2825,19 @@ function renderAdelantoRow(i, rowEl){
   var existing = rowEl.parentNode.querySelector('#adelanto-row-'+i);
   if(modalItems[i].tipo !== 'costo'){ if(existing) existing.remove(); return; }
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
-  if(!selTecs.length){ if(existing) existing.remove(); return; }
   var adelantos = modalItems[i].adelantos || {};
   var totalItem = Number(modalItems[i].importe||0) * Number(modalItems[i].qty||1);
-  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var anticipoEl = document.getElementById('m-anticipo');
+  var clienteAporte = anticipoEl ? Number(anticipoEl.value||0) : 0;
+  var totalAdelantado = clienteAporte + selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
   var diferencia = totalItem - totalAdelantado;
-  var estadoColor = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
-  var estadoTxt = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
+  var estadoColor = Math.abs(diferencia) < 1 ? 'var(--green-text)' : (diferencia < 0 ? 'var(--blue-text)' : 'var(--yellow-text)');
+  var estadoTxt = Math.abs(diferencia) < 1 ? '\u2705 Completo' : (diferencia < 0 ? ('Sobran $ '+fmt(Math.abs(diferencia))) : ('Faltan $ '+fmt(diferencia)));
+  var clienteRow = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+      '<span style="min-width:72px;font-size:12px;font-weight:600;color:var(--yellow-text)">Cliente</span>' +
+      '<input type="number" value="'+clienteAporte+'" disabled title="Se edita en \'Anticipo del cliente\', arriba" ' +
+      'style="flex:1;padding:5px 8px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text2);font-size:13px;opacity:.8">' +
+    '</div>';
   var tecInputs = selTecs.map(function(id){
     var t = db.tecnicos.find(function(x){ return x.id===id; });
     var nombre = t ? t.nombre : id;
@@ -2845,7 +2851,7 @@ function renderAdelantoRow(i, rowEl){
   }).join('');
   var html = '<div id="adelanto-row-'+i+'" style="margin:-2px 0 8px 0;padding:10px 12px;background:var(--blue-light);border:1.5px solid var(--border2);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm)">' +
     '<div style="font-size:11px;font-weight:700;color:var(--blue-text);letter-spacing:.4px;margin-bottom:8px">\ud83d\udcb8 \u00bfQui\u00e9n adelant\u00f3 este importe?</div>' +
-    tecInputs +
+    clienteRow + tecInputs +
     '<div class="adelanto-estado" style="font-size:11px;font-weight:600;color:'+estadoColor+';margin-top:6px;text-align:right">'+estadoTxt+'</div>' +
   '</div>';
   if(existing){ existing.outerHTML = html; } else { rowEl.insertAdjacentHTML('afterend', html); }
@@ -2856,13 +2862,15 @@ function onAdelantoInput(itemIdx, tecId, val){
   modalItems[itemIdx].adelantos[tecId] = Number(val||0);
   var adelantos = modalItems[itemIdx].adelantos;
   var totalItem = Number(modalItems[itemIdx].importe||0) * Number(modalItems[itemIdx].qty||1);
+  var anticipoEl = document.getElementById('m-anticipo');
+  var clienteAporte = anticipoEl ? Number(anticipoEl.value||0) : 0;
   var selTecs = [...document.querySelectorAll('#chips-tec .chip.sel')].map(c=>c.dataset.tid);
-  var totalAdelantado = selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
+  var totalAdelantado = clienteAporte + selTecs.reduce(function(a,id){ return a + Number(adelantos[id]||0); }, 0);
   var diferencia = totalItem - totalAdelantado;
   var estadoEl = document.querySelector('#adelanto-row-'+itemIdx+' .adelanto-estado');
   if(estadoEl){
-    estadoEl.style.color = Math.abs(diferencia) < 1 ? 'var(--green-text)' : 'var(--yellow-text)';
-    estadoEl.textContent = Math.abs(diferencia) < 1 ? '\u2705 Completo' : ('Faltan $ '+fmt(Math.abs(diferencia)));
+    estadoEl.style.color = Math.abs(diferencia) < 1 ? 'var(--green-text)' : (diferencia < 0 ? 'var(--blue-text)' : 'var(--yellow-text)');
+    estadoEl.textContent = Math.abs(diferencia) < 1 ? '\u2705 Completo' : (diferencia < 0 ? ('Sobran $ '+fmt(Math.abs(diferencia))) : ('Faltan $ '+fmt(diferencia)));
     if(Math.abs(diferencia) < 1){
       var bloqueId = '#adelanto-row-'+itemIdx;
       setTimeout(function(){
@@ -2906,18 +2914,10 @@ function renderItemsList(){
   updateResumen();
 }
 function syncAndRefresh(){
-  // Guardar valores de reparto antes de re-renderizar
-  const repartoVals = {};
-  document.querySelectorAll('[id^="rep-"]').forEach(el=>{
-    repartoVals[el.id] = el.value;
-  });
   syncItems();
+  const rows = document.querySelectorAll('.irow');
+  modalItems.forEach((item,i)=>{ if(item.tipo==='costo' && rows[i]) renderAdelantoRow(i, rows[i]); });
   updateResumen();
-  // Restaurar valores de reparto si el usuario ya los había tocado
-  Object.entries(repartoVals).forEach(([id, val])=>{
-    const el = document.getElementById(id);
-    if(el && val !== '') el.value = val;
-  });
 }
 
 // Estado externo del reparto - persiste entre re-renders
@@ -2975,8 +2975,8 @@ function updateResumen(){
       '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(saldoPend)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (selTecs.length ? (
-      (Math.abs(diffBase)>=1 ? '<div class="alert aw" style="margin-top:8px;padding:8px 10px;font-size:12px">⚠️ El reparto no coincide con la base (dif. $'+fmt(Math.abs(diffBase))+'). Tocá <strong>↺ Reset</strong> para recalcular.</div>' : '') +
-      '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><div style="font-size:12px;font-weight:600;color:var(--text3)">Reparto por técnico (editable)</div><button onclick="resetReparto()" style="font-size:11px;padding:2px 8px;border:1px solid var(--border2);border-radius:4px;background:var(--surface2);color:var(--text2);cursor:pointer">↺ Reset</button></div>'+tecRows+'</div>'
+      (Math.abs(diffBase)>=1 ? '<div class="alert aw" style="margin-top:8px;padding:8px 10px;font-size:12px">⚠️ El reparto no coincide con la base (dif. $'+fmt(Math.abs(diffBase))+'). Ajustá los montos manualmente.</div>' : '') +
+      '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px"><div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:4px">Reparto por técnico (editable)</div>'+tecRows+'</div>'
     ) : '') +
     '</div>';
 }
@@ -2996,11 +2996,6 @@ function calcReparto(selTecs, base){
     vals[id] = (i === libresIds.length-1) ? sobrante - each*(libresIds.length-1) : each;
   });
   return vals;
-}
-
-function resetReparto(){
-  repartoEditado = {};
-  updateResumen();
 }
 
 function onRepartoInput(inp, editedId){
