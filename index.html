@@ -175,7 +175,8 @@ button{cursor:pointer}
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -1747,7 +1748,7 @@ function generarPDF(id){
 function compartirPDF(id){
   const s = db.servicios.find(x=>Number(x.id)===Number(id));
   if(!s) return;
-  if(typeof html2pdf === 'undefined'){
+  if(typeof html2canvas === 'undefined' || !window.jspdf){
     showAlert('No se pudo cargar el generador de PDF (revisá la conexión) — usá "📄 PDF" y compartilo desde ahí.');
     return;
   }
@@ -1778,29 +1779,50 @@ function compartirPDF(id){
   // contenido recién insertado antes de medirlo y capturarlo (si se
   // mide/captura en el mismo tick, en mobile puede salir en blanco).
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
-  html2pdf().set({
-    margin: 0,
-    filename: nombreArchivo,
-    image: { type:'jpeg', quality:0.95 },
-    html2canvas: { scale:2, useCORS:true, scrollX:0, scrollY:0, backgroundColor:'#ffffff', windowWidth:794, windowHeight:cont.scrollHeight },
-    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
-  }).from(cont).toPdf().outputPdf('blob').then(function(blob){
-    limpiar();
-    const file = new File([blob], nombreArchivo, { type:'application/pdf' });
-    if(navigator.canShare && navigator.canShare({ files:[file] })){
-      navigator.share({ files:[file], title:'Presupuesto '+nro, text:'Presupuesto '+nro+' · '+(s.cliente||'') })
-        .catch(function(err){ if(err && err.name!=='AbortError') showAlert('No se pudo compartir: '+err.message); });
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = nombreArchivo; a.click();
-      setTimeout(()=>URL.revokeObjectURL(url), 10000);
-      showAlert('Este navegador no permite compartir directo — descargué el PDF, compartilo desde Descargas.');
-    }
-  }).catch(function(err){
-    limpiar();
-    showAlert('No se pudo generar el PDF: '+err.message);
-  });
+    html2canvas(cont, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: cont.scrollWidth,
+      windowHeight: cont.scrollHeight
+    }).then(function(canvas){
+      limpiar();
+      if(!canvas.width || !canvas.height){
+        showAlert('No se pudo capturar el contenido del presupuesto.');
+        return;
+      }
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgH = canvas.height * pageW / canvas.width;
+      let restante = imgH, posY = 0;
+      pdf.addImage(imgData, 'JPEG', 0, posY, pageW, imgH);
+      restante -= pageH;
+      while(restante > 0){
+        posY = restante - imgH;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, posY, pageW, imgH);
+        restante -= pageH;
+      }
+      const blob = pdf.output('blob');
+      const file = new File([blob], nombreArchivo, { type:'application/pdf' });
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        navigator.share({ files:[file], title:'Presupuesto '+nro, text:'Presupuesto '+nro+' · '+(s.cliente||'') })
+          .catch(function(err){ if(err && err.name!=='AbortError') showAlert('No se pudo compartir: '+err.message); });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = nombreArchivo; a.click();
+        setTimeout(()=>URL.revokeObjectURL(url), 10000);
+        showAlert('Este navegador no permite compartir directo — descargué el PDF, compartilo desde Descargas.');
+      }
+    }).catch(function(err){
+      limpiar();
+      showAlert('No se pudo generar el PDF: '+err.message);
+    });
   }); });
 }
 
