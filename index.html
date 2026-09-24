@@ -1801,7 +1801,7 @@ function compartirPDF(id){
       let restante = imgH, posY = 0;
       pdf.addImage(imgData, 'JPEG', 0, posY, pageW, imgH);
       restante -= pageH;
-      while(restante > 0){
+      while(restante > 3){ // tolerancia: ignora sobrantes de pocos mm por redondeo
         posY = restante - imgH;
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, posY, pageW, imgH);
