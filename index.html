@@ -1752,20 +1752,35 @@ function compartirPDF(id){
     return;
   }
   const { html, nro } = construirPresupuestoContenido(s);
+
+  // El contenido tiene que quedar DENTRO del área visible para que
+  // html2canvas lo pueda capturar (en mobile, si se lo saca de pantalla
+  // con coordenadas negativas, muchos navegadores lo renderizan en blanco).
+  // Por eso se muestra en pantalla pero tapado con un overlay de carga.
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;font-size:14px;font-weight:600';
+  overlay.textContent = 'Generando PDF…';
+  document.body.appendChild(overlay);
+
   const cont = document.createElement('div');
-  cont.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff';
+  cont.style.cssText = 'position:fixed;top:0;left:0;width:794px;background:#fff;z-index:99998';
   cont.innerHTML = html;
   document.body.appendChild(cont);
+
+  const limpiar = function(){
+    if(cont.parentNode) document.body.removeChild(cont);
+    if(overlay.parentNode) document.body.removeChild(overlay);
+  };
 
   const nombreArchivo = 'Presupuesto_'+nro+'_'+(s.cliente||'').replace(/[^a-zA-Z0-9]+/g,'_')+'.pdf';
   html2pdf().set({
     margin: 0,
     filename: nombreArchivo,
     image: { type:'jpeg', quality:0.95 },
-    html2canvas: { scale:2, useCORS:true },
+    html2canvas: { scale:2, useCORS:true, windowWidth: 794, windowHeight: cont.scrollHeight },
     jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
   }).from(cont).toPdf().outputPdf('blob').then(function(blob){
-    document.body.removeChild(cont);
+    limpiar();
     const file = new File([blob], nombreArchivo, { type:'application/pdf' });
     if(navigator.canShare && navigator.canShare({ files:[file] })){
       navigator.share({ files:[file], title:'Presupuesto '+nro, text:'Presupuesto '+nro+' · '+(s.cliente||'') })
@@ -1778,7 +1793,7 @@ function compartirPDF(id){
       showAlert('Este navegador no permite compartir directo — descargué el PDF, compartilo desde Descargas.');
     }
   }).catch(function(err){
-    if(cont.parentNode) document.body.removeChild(cont);
+    limpiar();
     showAlert('No se pudo generar el PDF: '+err.message);
   });
 }
