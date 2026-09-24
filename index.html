@@ -237,7 +237,10 @@ button{cursor:pointer}
         </g>
       </svg>
       </div>
-      <div class="topbar-title">Servicios Técnicos</div>
+      <div style="display:flex;flex-direction:column;line-height:1.2">
+        <div class="topbar-title">Servicios Técnicos</div>
+        <div id="app-version" style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:500;letter-spacing:.2px">V23.9.26 · a089629</div>
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;position:relative">
       <span id="sync-indicator" style="font-size:11px;color:rgba(255,255,255,0.7);transition:opacity .5s;opacity:0"></span>
@@ -261,9 +264,13 @@ button{cursor:pointer}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Técnicos
         </div>
-        <div id="menu-config-item" onmousedown="toggleMenu();setTimeout(abrirConfiguracion,50)" style="padding:12px 16px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px">
+        <div id="menu-config-item" onmousedown="toggleMenu();setTimeout(abrirConfiguracion,50)" style="padding:12px 16px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           Configuración
+        </div>
+        <div onmousedown="toggleMenu();setTimeout(abrirAyuda,50)" style="padding:12px 16px;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Ayuda
         </div>
       </div>
     </div>
@@ -1114,6 +1121,26 @@ document.addEventListener('mousedown', e=>{
   const menu=document.getElementById('dropdown-menu');
   if(menu&&btn&&!btn.contains(e.target)&&!menu.contains(e.target)) menu.style.display='none';
 });
+
+// ── AYUDA ────────────────────────────────────────────────────────────
+function abrirAyuda(){
+  var secciones = [
+    ['📋 Pendientes / Realizados', 'Tocá "+" para cargar un pedido nuevo. Cargá cliente, dirección y técnicos asignados. Cuando el trabajo esté terminado y cobrado, marcalo como Facturado desde el detalle.'],
+    ['🧾 Ítems del servicio', '<strong>Ingreso</strong> = mano de obra (lo que se reparte). <strong>Costo</strong> = materiales (se cobra al cliente pero no se reparte, es plata que pasa). <strong>Gasto</strong> = cochera, peajes, comida, imprevistos — se descuenta antes de repartir.'],
+    ['💵 Anticipo del cliente', 'Cuando el cliente adelanta plata para materiales, cargalo ahí. Si sobra respecto de lo que costaron los materiales, ese sobrante se suma solo a la base a repartir. Si un técnico puso plata de su bolsillo para cubrir la diferencia, se anota en "¿Quién adelantó este importe?" de ese ítem — se le devuelve aparte, no se mezcla con el reparto.'],
+    ['🤝 Reparto por técnico', 'Se recalcula solo cada vez que cambiás un dato (ítems, gastos, anticipo). Si escribís un monto a mano para un técnico, ese queda fijo y el resto se ajusta entre los demás.'],
+    ['👥 Clientes y equipos', 'Desde el menú → Clientes podés ver el historial de cada uno y los equipos instalados vinculados (con su historial de mantenimiento).'],
+    ['📅 Agenda', 'Vista mensual de los trabajos programados, con el clima del día para planificar visitas.'],
+    ['📊 Estadísticas', 'Totales por período, por técnico y por cliente. Se puede exportar a Excel.'],
+  ];
+  var html = '<div class="mtitle">❓ Guía rápida</div>';
+  html += secciones.map(function(s){
+    return '<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:var(--blue-text);margin-bottom:4px">'+s[0]+'</div><div style="font-size:13px;color:var(--text2);line-height:1.6">'+s[1]+'</div></div>';
+  }).join('');
+  html += '<div style="margin-top:6px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2)">🔗 Acceso a la app: <a href="https://infomadmarcelo-ui.github.io/md-servicios/" target="_blank" style="color:var(--blue-text);font-weight:600;word-break:break-all">infomadmarcelo-ui.github.io/md-servicios</a></div>';
+  html += '<div class="mfoot"><button class="btn btn-primary" onclick="closeModal()">Cerrar</button></div>';
+  showModal(html);
+}
 
 // ── CLIENTES ─────────────────────────────────────────────────────────
 var _clienteEditandoId = null; // ID del cliente siendo editado
