@@ -175,6 +175,7 @@ button{cursor:pointer}
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.14.0/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -1560,9 +1561,7 @@ function mapsIcon(dir, zona){
 // ── GENERAR PDF ───────────────────────────────────────────────────────
 var logoSVGStr = '<div style="width:110px;height:110px;background:#1a3a6b;border-radius:10px;display:flex;align-items:center;justify-content:center"></div>';
 
-function generarPDF(id){
-  const s = db.servicios.find(x=>Number(x.id)===Number(id));
-  if(!s) return;
+function construirPresupuestoContenido(s){
   const f = calcFin(s);
   const tecs = db.tecnicos.filter(t=>s.tecnicos&&s.tecnicos.includes(t.id));
   const fmtN = n => Math.round(Number(n||0)).toLocaleString('es-AR');
@@ -1717,6 +1716,14 @@ function generarPDF(id){
     <div style="height:6px;background:linear-gradient(90deg,#1a3a6b,#93c5fd,#1a3a6b);position:absolute;bottom:0;width:100%"></div>
   </div>`;
 
+  return { html, nro };
+}
+
+function generarPDF(id){
+  const s = db.servicios.find(x=>Number(x.id)===Number(id));
+  if(!s) return;
+  const { html, nro } = construirPresupuestoContenido(s);
+
   // En móvil window.print() no funciona bien - abrir en nueva pestaña
   // Botones de acción antes del presupuesto
   const botonesHtml = `
@@ -1732,6 +1739,48 @@ function generarPDF(id){
   a.target = '_blank';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(url), 10000);
+}
+
+// Genera el PDF real (no HTML) y lo comparte con el selector nativo del
+// celular (WhatsApp, Drive, etc.). En escritorio, si no hay soporte de
+// compartir archivos, lo descarga directamente.
+function compartirPDF(id){
+  const s = db.servicios.find(x=>Number(x.id)===Number(id));
+  if(!s) return;
+  if(typeof html2pdf === 'undefined'){
+    showAlert('No se pudo cargar el generador de PDF (revisá la conexión) — usá "📄 PDF" y compartilo desde ahí.');
+    return;
+  }
+  const { html, nro } = construirPresupuestoContenido(s);
+  const cont = document.createElement('div');
+  cont.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff';
+  cont.innerHTML = html;
+  document.body.appendChild(cont);
+
+  const nombreArchivo = 'Presupuesto_'+nro+'_'+(s.cliente||'').replace(/[^a-zA-Z0-9]+/g,'_')+'.pdf';
+  html2pdf().set({
+    margin: 0,
+    filename: nombreArchivo,
+    image: { type:'jpeg', quality:0.95 },
+    html2canvas: { scale:2, useCORS:true },
+    jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+  }).from(cont).toPdf().outputPdf('blob').then(function(blob){
+    document.body.removeChild(cont);
+    const file = new File([blob], nombreArchivo, { type:'application/pdf' });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      navigator.share({ files:[file], title:'Presupuesto '+nro, text:'Presupuesto '+nro+' · '+(s.cliente||'') })
+        .catch(function(err){ if(err && err.name!=='AbortError') showAlert('No se pudo compartir: '+err.message); });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = nombreArchivo; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 10000);
+      showAlert('Este navegador no permite compartir directo — descargué el PDF, compartilo desde Descargas.');
+    }
+  }).catch(function(err){
+    if(cont.parentNode) document.body.removeChild(cont);
+    showAlert('No se pudo generar el PDF: '+err.message);
+  });
 }
 
 // ── PENDIENTES ───────────────────────────────────────────────────────
@@ -1794,6 +1843,7 @@ function renderPendList(){
       (f.totalCliente?'<div style="font-size:13px;color:var(--text2);margin-top:4px">Total cliente: <strong style="color:#fbbf24">$ '+fmt(f.totalCliente)+'</strong></div>':'')+
       '<div class="scard-foot"><div class="arow">' +
       '<button class="btn btn-sm" onclick="event.stopPropagation();generarPDF('+s.id+')" title="Generar PDF">📄 PDF</button>' +
+      '<button class="btn btn-sm" onclick="event.stopPropagation();compartirPDF('+s.id+')" title="Compartir PDF">📤 Compartir</button>' +
       '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();facturar('+s.id+')">Facturar</button>' +
       '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteService('+s.id+')">Borrar</button>' +
       '</div></div></div>';
@@ -1969,6 +2019,7 @@ function renderFactList(){
       (tecs.length?'<div style="font-size:12px;color:var(--green-text);margin-top:2px">'+tecs.map(t=>t.nombre+': $ '+fmt(f.rMap[t.id]||0)).join(' · ')+'</div>':'')+
       '<div class="scard-foot"><div class="arow">' +
       '<button class="btn btn-sm" onclick="event.stopPropagation();generarPDF('+s.id+')" title="Generar PDF">📄 PDF</button>' +
+      '<button class="btn btn-sm" onclick="event.stopPropagation();compartirPDF('+s.id+')" title="Compartir PDF">📤 Compartir</button>' +
       '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();desFacturar('+s.id+')">Borrar</button>' +
       '</div></div></div>';
   }).join('');
