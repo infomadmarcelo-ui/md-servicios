@@ -1835,7 +1835,7 @@ function viewPendiente(id){
     (f.sobranteAnticipo>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Sobrante de anticipo</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(f.sobranteAnticipo)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
     (f.anticipoCliente>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(f.anticipoCliente)+'</span></div>'+
-      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
+      '<div class="rrow" style="background:var(--yellow-light);border-radius:var(--radius-sm);padding:8px 10px;margin:2px 0"><span style="color:var(--yellow-text);font-weight:700">Saldo pendiente de cobro</span><span style="color:var(--yellow-text);font-weight:800;font-size:16px">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
@@ -2021,7 +2021,7 @@ function viewService(id){
     (f.sobranteAnticipo>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Sobrante de anticipo</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(f.sobranteAnticipo)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
     (f.anticipoCliente>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(f.anticipoCliente)+'</span></div>'+
-      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
+      '<div class="rrow" style="background:var(--yellow-light);border-radius:var(--radius-sm);padding:8px 10px;margin:2px 0"><span style="color:var(--yellow-text);font-weight:700">Saldo pendiente de cobro</span><span style="color:var(--yellow-text);font-weight:800;font-size:16px">$ '+fmt(f.saldoPendiente)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (tecs.length ? '<div style="border-top:1px solid var(--border2);margin-top:8px;padding-top:4px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px">Reparto por técnico</div>' +
@@ -2954,15 +2954,16 @@ function updateResumen(){
     const nombre = t ? t.nombre : id;
     const adv = adelantosPorTec[id] || 0;
     const total = vals[id] + adv;
-    const advStr = adv > 0 ? '<span style="font-size:11px;color:var(--blue-text);font-weight:600;white-space:nowrap">+$'+fmt(adv)+' mat</span>' : '';
-    const totalStr = adv > 0 ? '<span style="font-size:12px;font-weight:800;color:var(--green-text);white-space:nowrap">=$'+fmt(total)+'</span>' : '';
+    const advBadge = adv > 0 ? '<div style="margin-top:5px;padding:6px 10px;background:var(--blue-light);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+      '<span style="font-size:13px;color:var(--blue-text);font-weight:700">💰 Devolverle $'+fmt(adv)+' de materiales</span>' +
+      '<span style="font-size:15px;color:var(--green-text);font-weight:800;white-space:nowrap">Total: $'+fmt(total)+'</span>' +
+    '</div>' : '';
     return '<div style="margin-top:6px"><div style="display:flex;align-items:center;gap:6px">' +
       '<span style="min-width:52px;font-size:13px;font-weight:500;color:var(--green-text)">'+nombre+'</span>' +
       '<input type="number" id="rep-'+id+'" value="'+vals[id]+'" ' +
       'style="flex:1;padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;outline:none" ' +
       'oninput="onRepartoInput(this,\''+id+'\')">'+
-      advStr + totalStr +
-    '</div></div>';
+    '</div>' + advBadge + '</div>';
   }).join('');
 
   el.innerHTML = '<div class="resumen">' +
@@ -2972,7 +2973,7 @@ function updateResumen(){
     (sobrante>0 ? '<div class="rrow"><span style="color:var(--yellow-text)">☆ Sobrante de anticipo</span><span style="color:var(--yellow-text);font-weight:600">+ $ '+fmt(sobrante)+'</span></div>' : '') +
     '<div class="rrow tot"><span>Total cobrado al cliente</span><span style="color:#fbbf24">$ '+fmt(totC)+'</span></div>' +
     (anticipo>0 ? '<div class="rrow"><span style="color:var(--text2)">Anticipo ya recibido</span><span style="color:var(--text2);font-weight:600">− $ '+fmt(anticipo)+'</span></div>'+
-      '<div class="rrow"><span>Saldo pendiente de cobro</span><span style="font-weight:700">$ '+fmt(saldoPend)+'</span></div>' : '') +
+      '<div class="rrow" style="background:var(--yellow-light);border-radius:var(--radius-sm);padding:8px 10px;margin:2px 0"><span style="color:var(--yellow-text);font-weight:700">Saldo pendiente de cobro</span><span style="color:var(--yellow-text);font-weight:800;font-size:16px">$ '+fmt(saldoPend)+'</span></div>' : '') +
     '<div class="rrow tot" style="border-top:none;margin-top:2px;padding-top:2px"><span>Base a repartir</span><span style="color:var(--green)">$ '+fmt(base)+'</span></div>' +
     (selTecs.length ? (
       (Math.abs(diffBase)>=1 ? '<div class="alert aw" style="margin-top:8px;padding:8px 10px;font-size:12px">⚠️ El reparto no coincide con la base (dif. $'+fmt(Math.abs(diffBase))+'). Ajustá los montos manualmente.</div>' : '') +
